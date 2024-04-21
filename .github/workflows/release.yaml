@@ -13,6 +13,15 @@ jobs:
         platform: [linux-native, linux-proton, windows, macos]
     steps:
       - uses: actions/checkout@v4
+
+      - name: Get Current Release
+        id: get_current_release
+        uses: joutvhu/get-release@v1
+        with:
+          debug: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create directories
         run: |
           mkdir -p ${{ matrix.platform }}
@@ -39,17 +48,13 @@ jobs:
         run: |
           cp src/*.lua balamod-${{matrix.platform}}
 
+      - name: Generate version file
+        run: |
+          echo "return \"$(git describe --tags --always)\"" > balamod-${{matrix.platform}}/balamod_version.lua
+
       - name: Create tarball with balamod files
         run: |
           tar czf balamod-${{matrix.platform}}.tar.gz balamod-${{matrix.platform}}/*
-
-      - name: Get Current Release
-        id: get_current_release
-        uses: joutvhu/get-release@v1
-        with:
-          debug: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Release
         uses: actions/upload-release-asset@v1
