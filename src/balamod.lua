@@ -5,12 +5,7 @@ local console = require('console')
 local json = require('json')
 local utils = require('utils')
 local tar = require('tar')
-
-local dir = love.filesystem.getSourceBaseDirectory()
-local old_cpath = package.cpath
-package.cpath = package.cpath .. ';' .. dir .. '/?.so' .. ';' .. dir .. '/?.dll'
 local https = require('https')
-package.cpath = old_cpath
 
 logger = logging.getLogger('balamod')
 mods = {}
