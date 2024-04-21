@@ -1,0 +1,62 @@
+on:
+  release:
+    types: [created]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [linux-native, linux-proton, windows, macos]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create directories
+        run: |
+          mkdir -p ${{ matrix.platform }}
+
+      - name: Download Linux Lua HTTPS files
+        if: ${{ matrix.platform == 'linux-native' }}
+        run: |
+          curl -LO https://github.com/balamod/lua-https/releases/download/v1.0.1/linux-https.so
+          mv linux-https.so balamod-${{matrix.platform}}/https.so
+
+      - name: Download MacOS Lua HTTPS files
+        if: ${{ matrix.platform == 'macos' }}
+        run: |
+          curl -LO https://github.com/balamod/lua-https/releases/download/v1.0.1/macos-https.dll
+          mv macos-https.dll balamod-${{matrix.platform}}/https.dll
+
+      - name: Download Windows Lua HTTPS files
+        if: ${{ matrix.platform == 'windows' || matrix.platform == 'linux-proton' }}
+        run: |
+          curl -LO https://github.com/balamod/lua-https/releases/download/v1.0.1/windows-x64-https.dll
+          mv windows-x64-https.dll balamod-${{matrix.platform}}/https.dll
+
+      - name: Copy source files into directory
+        run: |
+          cp src/*.lua balamod-${{matrix.platform}}
+
+      - name: Create tarball with balamod files
+        run: |
+          tar czf balamod-${{matrix.platform}}.tar.gz balamod-${{matrix.platform}}/*
+
+      - name: Get Current Release
+        id: get_current_release
+        uses: joutvhu/get-release@v1
+        with:
+          debug: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.get_current_release.outputs.upload_url }}
+          asset_path: ./balamod-${{matrix.platform}}.tar.gz
+          asset_name: balamod-${{matrix.platform}}.tar.gz
+          asset_content_type: application/gzip
