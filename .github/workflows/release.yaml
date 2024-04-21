@@ -35,8 +35,8 @@ jobs:
       - name: Download MacOS Lua HTTPS files
         if: ${{ matrix.platform == 'macos' }}
         run: |
-          curl -LO https://github.com/balamod/lua-https/releases/download/v1.0.1/macos-https.dll
-          mv macos-https.dll balamod-${{matrix.platform}}/https.dll
+          curl -LO https://github.com/balamod/lua-https/releases/download/v1.0.1/macos-https.so
+          mv macos-https.so balamod-${{matrix.platform}}/https.so
 
       - name: Download Windows Lua HTTPS files
         if: ${{ matrix.platform == 'windows' || matrix.platform == 'linux-proton' }}
