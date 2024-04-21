@@ -24,7 +24,7 @@ jobs:
 
       - name: Create directories
         run: |
-          mkdir -p ${{ matrix.platform }}
+          mkdir -p balamod-${{ matrix.platform }}
 
       - name: Download Linux Lua HTTPS files
         if: ${{ matrix.platform == 'linux-native' }}
