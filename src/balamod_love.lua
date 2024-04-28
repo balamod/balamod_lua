@@ -6,8 +6,8 @@ local game_love_mousepressed = love.mousepressed
 local game_love_mousereleased = love.mousereleased
 local game_love_mousemoved = love.mousemoved
 local game_love_wheelmoved = love.wheelmoved
-local game_love_textinput = love.textinput
-local game_love_resize = love.resize
+local game_love_textinput = love.textinput  -- luacheck: ignore
+local game_love_resize = love.resize  -- luacheck: ignore
 local game_love_quit = love.quit
 local game_love_load = love.load
 local game_love_gamepad_pressed = love.gamepadpressed
@@ -20,6 +20,8 @@ local logging = require('logging')
 local utils = require('utils')
 local logger = logging.getLogger('love')
 local localization = require('localization')
+
+local status, message
 
 function love.load(args)
     local status, message = pcall(balamod.callModCallbacksIfExists, balamod.mods, "on_game_load", true, args)
@@ -69,7 +71,7 @@ function love.update(dt)
         end
     end
 
-    local status, result = pcall(balamod.callModCallbacksIfExists, balamod.mods, "on_post_update", false, dt)
+    status, result = pcall(balamod.callModCallbacksIfExists, balamod.mods, "on_post_update", false, dt)
     if not status then
         logger:warn("Failed on_post_update for mods: ", result)
     end
@@ -227,7 +229,14 @@ end
 
 function love.joystickaxis(joystick, axis, value)
     local cancel_event = false
-    local status, result = pcall(balamod.callModCallbacksIfExists, balamod.mods, "on_joystick_axis", false, joystick, axis, value)
+    local status, result = pcall(
+        balamod.callModCallbacksIfExists,
+        balamod.mods, "on_joystick_axis",
+        false,
+        joystick,
+        axis,
+        value
+    )
     if not status then
         logger:warn("Failed on_joystick_axis for mods: ", result)
     else

@@ -1,4 +1,5 @@
-local balamod = require('balamod')
+local logging = require('logging')
+local logger = logging.getLogger('jokerAPI')
 
 local joker = {}
 joker._VERSION = "0.9.0"
@@ -10,13 +11,13 @@ joker.removeFromDeckEffects = {}
 joker.loc_vars = {}
 
 local function add_joker(args)
-    if not args.mod_id then logger:error("jokerAPI: mod_id REQUIRED when adding a joker"); return; end
+    if not args.mod_id then logger:error("mod_id REQUIRED when adding a joker"); return; end
     local id = args.id or "j_Joker_Placeholder" .. #G.P_CENTER_POOLS["Joker"] + 1
     local name = args.name or "Joker Placeholder"
     local calculate_joker_effect = args.calculate_joker_effect or function(_) end
     local order = #G.P_CENTER_POOLS["Joker"] + 1
-    local unlocked = nil
-    local discovered = nil
+    local unlocked = nil  -- luacheck: ignore
+    local discovered = nil  -- luacheck: ignore
     if args.unlocked ~= nil then
         unlocked = args.unlocked
     else
@@ -29,7 +30,7 @@ local function add_joker(args)
     end
     local cost = args.cost or 4
     local pos = {x=0, y=0}
-    local effect = args.effect or ""
+    local effect = args.effect or ""  -- luacheck: ignore
     local config = args.config or {}
     local desc = args.desc or {"Placeholder"}
     local rarity = args.rarity or 1
@@ -81,7 +82,14 @@ local function add_joker(args)
     G.P_CENTERS[id] = newJoker
 
     --add name + description to the localization object
-    local newJokerText = {name=name, text=desc, unlock=unlock_condition_desc, text_parsed={}, name_parsed={}, unlock_parsed={}}
+    local newJokerText = {
+        name=name,
+        text=desc,
+        unlock=unlock_condition_desc,
+        text_parsed={},
+        name_parsed={},
+        unlock_parsed={}
+    }
     for _, line in ipairs(desc) do
         newJokerText.text_parsed[#newJokerText.text_parsed+1] = loc_parse_string(line)
     end

@@ -1,10 +1,9 @@
 local _MODULE = {}
 _MODULE._VERSION = "1.0.0"
 
-local balamod = require("balamod")
 local logging = require("logging")
 local logger = logging.getLogger("challenge")
-local utils = require("utils")
+-- local utils = require("utils")
 _MODULE.logger = logger
 local challenges = {}
 
@@ -39,23 +38,23 @@ local allModifiers = {
     "hand_size",
 }
 
-local function isIdInTable(id, theTable)
-    for _, value in ipairs(theTable) do
-        if value.id == id then
-            return true
-        end
-    end
-    return false
-end
+-- local function isIdInTable(id, theTable)
+--     for _, value in ipairs(theTable) do
+--         if value.id == id then
+--             return true
+--         end
+--     end
+--     return false
+-- end
 
-local function isValueForIdInTable(id, value, theTable)
-    for _, v in ipairs(theTable) do
-        if v.id == id and v.value == value then
-            return true
-        end
-    end
-    return false
-end
+-- local function isValueForIdInTable(id, value, theTable)
+--     for _, v in ipairs(theTable) do
+--         if v.id == id and v.value == value then
+--             return true
+--         end
+--     end
+--     return false
+-- end
 
 local function validateChallengeId(challengeId)
     if challengeId == nil then

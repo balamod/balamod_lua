@@ -212,8 +212,8 @@ local function mergeTables(table1, table2, logger)
         if type(v) == "table" and type(result[k]) == "table" then
             -- both are tables so we recurse, but first, we need to check
             -- whether it's an "array" table or a "dict" table
-            local isDictTable = all(map(keys(result), function(k)
-                return type(k) ~= "number"
+            local isDictTable = all(map(keys(result), function(key)
+                return type(key) ~= "number"
             end))
             if isDictTable then
                 result[k] = mergeTables(result[k], v, logger)

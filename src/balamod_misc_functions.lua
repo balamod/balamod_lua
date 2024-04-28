@@ -1,9 +1,8 @@
 local localization = require('localization')
 local consumable = require("consumable")
-local utils = require("utils")
 
-local misc_functions_init_localization = misc_functions_init_localization or init_localization
-local misc_generate_card_ui = generate_card_ui
+local misc_functions_init_localization = misc_functions_init_localization or init_localization  -- luacheck: ignore
+local misc_generate_card_ui = generate_card_ui  -- luacheck: ignore
 
 function init_localization()
     localization.inject()

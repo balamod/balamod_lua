@@ -14,15 +14,17 @@ for _, modFolder in ipairs(modFolders) do
         end
     end
 end
-local status, sortedMods = pcall(balamod.sortMods, balamod.mods)
+local status, sortedMods, message
+
+status, sortedMods = pcall(balamod.sortMods, balamod.mods)
 if not status then
     logger:warn("Failed to sort mods: ", sortedMods)
 else
     balamod.mods = sortedMods
 end
 
-logger:info("Mods: ", utils.keys(mods))
-local status, message = pcall(balamod.callModCallbacksIfExists, balamod.mods, "on_pre_load", true)
+logger:info("Mods: ", utils.keys(balamod.mods))
+status, message = pcall(balamod.callModCallbacksIfExists, balamod.mods, "on_pre_load", true)
 if not status then
     logger:warn("Failed to preload mods: ", message)
 end

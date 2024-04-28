@@ -10,6 +10,28 @@ local _MODULE = {
     LOGGERS = LOGGERS,
 }
 
+local function addZeroForLessThan10(number)
+    if(number < 10) then
+        return 0 .. number
+    else
+        return number
+    end
+end
+
+local function generateDateTime(start)
+    -- start is now in ms
+    -- need to round to seconds for an accurate date/time
+    start = math.floor(start or socket.gettime())
+    local dateTimeTable = os.date('*t', start)
+    local dateTime = dateTimeTable.year .. "-"
+            .. addZeroForLessThan10(dateTimeTable.month) .. "-"
+            .. addZeroForLessThan10(dateTimeTable.day) .. "-"
+            .. addZeroForLessThan10(dateTimeTable.hour) .. "-"
+            .. addZeroForLessThan10(dateTimeTable.min) .. "-"
+            .. addZeroForLessThan10(dateTimeTable.sec)
+    return dateTime
+end
+
 local function createLogger(name, lvl)
     local log_levels = {
         TRACE = 10,
@@ -40,14 +62,20 @@ local function createLogger(name, lvl)
                 text=text,
                 time=socket.gettime(),
                 name=self.name,
-                formatted=function(self, dump)
-                    if self.level == "PRINT" and not dump then
-                        return self.text
+                formatted=function(msg, dump)
+                    if msg.level == "PRINT" and not dump then
+                        return msg.text
                     end
                     if dump then
-                        return string.format("%s [%s] - %s :: %s", generateDateTime(self.time), self.name, self.level, self.text)
+                        return string.format(
+                            "%s [%s] - %s :: %s",
+                            generateDateTime(msg.time),
+                            msg.name,
+                            msg.level,
+                            msg.text
+                        )
                     end
-                    return string.format("[%s] - %s :: %s", self.name, self.level, self.text)
+                    return string.format("[%s] - %s :: %s", msg.name, msg.level, msg.text)
                 end,
             }
             table.insert(self.messages, message)
@@ -96,29 +124,7 @@ local function getAllMessages()
     return messages
 end
 
-function generateDateTime(start)
-    -- start is now in ms
-    -- need to round to seconds for an accurate date/time
-    start = math.floor(start or socket.gettime())
-    local dateTimeTable = os.date('*t', start)
-    local dateTime = dateTimeTable.year .. "-"
-            .. addZeroForLessThan10(dateTimeTable.month) .. "-"
-            .. addZeroForLessThan10(dateTimeTable.day) .. "-"
-            .. addZeroForLessThan10(dateTimeTable.hour) .. "-"
-            .. addZeroForLessThan10(dateTimeTable.min) .. "-"
-            .. addZeroForLessThan10(dateTimeTable.sec)
-    return dateTime
-end
-
-function addZeroForLessThan10(number)
-    if(number < 10) then
-        return 0 .. number
-    else
-        return number
-    end
-end
-
-function saveLogs()
+local function saveLogs()
     local filename = "logs/" .. generateDateTime() .. ".log"
     love.filesystem.write(filename, "")
     for _, message in ipairs(getAllMessages()) do
