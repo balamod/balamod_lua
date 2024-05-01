@@ -11,7 +11,8 @@ love.filesystem.setIdentity(love.filesystem.getIdentity(),false)
 
 local saveDir = love.filesystem.getSaveDirectory()
 local balamodDir = saveDir .. "/balamod"
-package.path = package.path .. ";" .. balamodDir .. "/?.lua"
+local modsDir = saveDir .. "/mods"
+package.path = package.path .. ";" .. balamodDir .. "/?.lua" .. ";" .. modsDir .. "/?.lua"
 if love.system.getOS() == "Windows" or love.system.getOS() == "Linux" then
     package.cpath = package.cpath .. ";" .. balamodDir .. "/?.dll"
 elseif love.system.getOS() == "OS X" then
