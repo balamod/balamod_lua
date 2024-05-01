@@ -156,7 +156,7 @@ local function remove(id)
 end
 local function newSet(args)
     if not args.name then 
-        logger:error("please enter a name for the set")
+        logger:error("Please enter a name for the set")
         return false
     end
     for k,v in pairs(consumable.modded_sets) do
@@ -166,8 +166,8 @@ local function newSet(args)
         end
     end
     local name = args.name
-    local collection_h = args.collection_height or 3
-    local collection_w = args.collection_width or 4
+    local collection_h = args.collection_height or 2
+    local collection_w = args.collection_width or 5
     local colour = args.colour or G.C.BLACK
     local temp = {
         name = name,
