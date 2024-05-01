@@ -1,12 +1,14 @@
 local balamod = require('balamod')
 
 local consumable = {}
-consumable._VERSION = "0.1.0"
+consumable._VERSION = "0.5.0"
 consumable.useEffects = {}
 consumable.useConditions = {}
 consumable.loc_vars = {}
 consumable.consumables = {}
-consumable.sets = {"Tarot", "Planet", "Spectral", "Tarot_Planet", "Consumeables"}
+consumable.vanilla_sets = {"Tarot", "Planet", "Spectral", "Tarot_Planet", "Consumeables"}
+consumable.modded_sets = {}
+consumable.num_modded_sets = 0
 consumable.tarot_loc_vars = {}
 local function add(args)
     if not args.set then logger:error("consumable API: set REQUIRED when adding a consumable"); return end
@@ -39,12 +41,38 @@ local function add(args)
     local unlock_condition_desc = args.unlock_condition_desc or {"LOCKED"}
     local no_pool_flag = args.no_pool_flag or nil
     local yes_pool_flag = args.yes_pool_flag or nil
+    
+    local tooltip = nil
+    if args.tooltip then
+        if #args.tooltip == 0 then
+            logger:error("consumable api: " .. id .. ": invalid tooltip format")
+            return false
+        end
+        for i=1, #args.tooltip do
+            if (not args.tooltip[i].name and not args.tooltip[i].text) then
+                logger:error("consumable api: " .. id .. ": invalid tooltip format")
+                return false
+            end
+            local temp = args.tooltip
+            if not args.tooltip[i].text_parsed then
+                temp.text_parsed = {}
+                for _, line in ipairs(args.tooltip[i].text) do
+                    temp.text_parsed[#temp.text_parsed+1] = loc_parse_string(line)
+                end
+            end
+            G.localization.descriptions.Other[id.."tooltip"..tostring(i)] = temp
+        end
+        tooltip = args.tooltip
+    end
+    local extra = args.extra or nil
 
     local newConsumable = {
         balamod = {
             mod_id = args.mod_id,
             key = id,
-            asset_key = args.mod_id .. "_" .. id
+            asset_key = args.mod_id .. "_" .. id,
+            tooltip = tooltip,
+            extra = extra,
         },
         key = id,
         order = order,
@@ -62,15 +90,15 @@ local function add(args)
         yes_pool_flag = yes_pool_flag,
         unlock_condition = unlock_condition,
         alerted = alerted,
+        atlas = args.mod_id .. "_" .. id,
     }
 
     local save_indices = {}
 
     --add it to all the game tables
     if not G.P_CENTER_POOLS[args.set] then
-        logger:info("Creating new center set: "..args.set)
-        G.P_CENTER_POOLS[args.set] = {}
-        table.insert(consumable.sets, args.set)
+        logger:error(args.set.." does not exist, did you create it?")
+        return false
     end
     table.insert(G.P_CENTER_POOLS[args.set], newConsumable)
     table.insert(G.P_CENTER_POOLS["Consumeables"], newConsumable)
@@ -112,6 +140,8 @@ local function add(args)
 
     -- indices for removal
     consumable.consumables[id] = {indices=save_indices, set=args.set}
+
+    return consumable, consumableText
 end
 local function remove(id)
     for k, v in pairs(consumable.consumables[id].indices) do
@@ -124,10 +154,37 @@ local function remove(id)
     consumable.loc_vars[id] = nil
     consumable.consumables[id] = nil
 end
-
+local function newSet(args)
+    if not args.name then 
+        logger:error("please enter a name for the set")
+        return false
+    end
+    for k,v in pairs(consumable.modded_sets) do
+        if k == args.name then
+            logger:error(args.name .. " already exists.")
+            return false
+        end
+    end
+    local name = args.name
+    local collection_h = args.collection_height or 3
+    local collection_w = args.collection_width or 4
+    local colour = args.colour or G.C.BLACK
+    local temp = {
+        name = name,
+        width = collection_w,
+        height = collection_h,
+        colour = colour,
+    }
+    consumable.modded_sets[name] = temp
+    G.P_CENTER_POOLS[name] = {}
+    consumable.num_modded_sets = consumable.num_modded_sets + 1
+    G.C.SECONDARY_SET[name] = colour
+    G.localization.misc.dictionary["k_"..string.lower(name)] = name
+end
 local _MODULE = consumable
 
 _MODULE.add = add
 _MODULE.remove = remove
+_MODULE.newSet = newSet
 
 return _MODULE
