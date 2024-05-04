@@ -79,7 +79,7 @@ local function request(url)
 end
 
 local function extractFunctionBody(path, function_name)
-    local pattern = "\n?%s*function%s+" .. function_name
+    local pattern = "\n?%s*function%s+" .. function_name .. "("
     local func_begin, fin = current_game_code[path]:find(pattern)
 
     if not func_begin then
