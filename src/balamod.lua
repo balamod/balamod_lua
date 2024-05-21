@@ -1062,6 +1062,7 @@ mods["dev_console"] = {
         console.removeCommand("money")
         console.removeCommand("discards")
         console.removeCommand("hands")
+		console.removeCommand("booster")
         console.logger:debug("Dev Console disabled")
     end,
     on_key_pressed = function (key_name)
