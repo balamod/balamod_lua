@@ -1026,6 +1026,29 @@ mods["dev_console"] = {
             "Usage: installmod <mod_url>"
         )
 
+		console:registerCommand(
+			"booster", 
+			function (args)
+				local pack = get_pack("shop_pack", args[1] or nil)
+				G.FUNCS.use_card({
+					config = {
+						ref_table = Card(0, 0, 0, 0, pack, pack)
+					}
+				})
+			end, 
+			"Generate a booster pack (random if no argument, otherwise specify type)", 
+			function (current_arg)
+                local subcommands = { "Standard", "Spectral", "Arcana", "Celestial", "Buffoon" }
+                for i, v in ipairs(subcommands) do
+                    if v:find(current_arg, 1, true) == 1 then
+                        return {v}
+                    end
+                end
+                return nil
+            end, 
+			"Usage: booster [Standard/Spectral/Arcana/Celestial/Buffoon]"
+		)
+
         console.logger:debug("Dev Console on_enable completed")
     end,
     on_disable = function()
