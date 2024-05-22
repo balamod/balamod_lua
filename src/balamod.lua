@@ -748,16 +748,13 @@ mods["dev_console"] = {
                 local c1 = nil
                 if string.sub(id, 1, 2) == "j_" then
                     c1 = create_card(nil, G.jokers, nil, 1, true, false, id, nil)
-                    c1.area = G.jokers
                 else
                     c1 = create_card(nil, G.consumeables, nil, 1, true, false, id, nil)
-                    c1.area = G.consumeables
                 end
                 G.E_MANAGER:add_event(Event({
                     trigger = 'after',
                     delay = 0.1,
                     func = function()
-                        c1.area:remove_card(c1)
                         c1:add_to_deck()
                         if string.sub(id, 1, 2) == "j_" then
                             G.jokers:emplace(c1)
