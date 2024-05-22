@@ -1,24 +1,23 @@
 local joker = require('joker')
 local seal = require('seal')
-local assets = require('assets')
 local logging = require('logging')
-local logger = logging.getLogger('card')
+local logger = logging.getLogger('card')  -- luacheck: ignore
 local consumable = require("consumable")
 local utils = require('utils')
 
 -- references to original patched functions
-local card_calculate_joker = card_calculate_joker or Card.calculate_joker
-local card_generate_uibox_ability_table = card_generate_uibox_ability_table or Card.generate_UIBox_ability_table
-local card_set_sprites = card_set_sprites or Card.set_sprites
-local card_calculate_seal = card_calculate_seal or Card.calculate_seal
-local card_get_end_of_round_effect = card_get_end_of_round_effect or Card.get_end_of_round_effect
-local card_eval_card = eval_card
-local card_open = card_open or Card.open
-local card_calculate_dollar_bonus = Card.calculate_dollar_bonus
-local card_add_to_deck = Card.add_to_deck
-local card_remove_from_deck = Card.remove_from_deck
-local card_use_consumeable = Card.use_consumeable
-local card_can_use_consumeable = Card.can_use_consumeable
+local card_calculate_joker = card_calculate_joker or Card.calculate_joker  -- luacheck: ignore
+local card_generate_uibox_ability_table = card_generate_uibox_ability_table or Card.generate_UIBox_ability_table  -- luacheck: ignore
+local card_set_sprites = card_set_sprites or Card.set_sprites  -- luacheck: ignore
+local card_calculate_seal = card_calculate_seal or Card.calculate_seal  -- luacheck: ignore
+local card_get_end_of_round_effect = card_get_end_of_round_effect or Card.get_end_of_round_effect  -- luacheck: ignore
+local card_eval_card = eval_card  -- luacheck: ignore
+local card_open = card_open or Card.open  -- luacheck: ignore
+local card_calculate_dollar_bonus = Card.calculate_dollar_bonus  -- luacheck: ignore
+local card_add_to_deck = Card.add_to_deck  -- luacheck: ignore
+local card_remove_from_deck = Card.remove_from_deck  -- luacheck: ignore
+local card_use_consumeable = Card.use_consumeable  -- luacheck: ignore
+local card_can_use_consumeable = Card.can_use_consumeable  -- luacheck: ignore
 
 
 function Card:calculate_joker(context)

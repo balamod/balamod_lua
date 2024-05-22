@@ -7,7 +7,7 @@ local utils = require('utils')
 local tar = require('tar')
 local https = require('https')
 
-logger = logging.getLogger('balamod')
+local logger = logging.getLogger('balamod')
 mods = {}
 local apis = {
     logging = logging,
@@ -68,8 +68,7 @@ end
 
 local function request(url)
     logger:debug('Request made with url: ', url)
-    local code
-    local response
+    local code, response, headers
     code, response, headers = https.request(url, {headers = {['User-Agent'] = 'Balamod-Client'}})
     if (code == 301 or code == 302) and headers.location then
         -- follow redirects if necessary
@@ -761,7 +760,7 @@ mods["dev_console"] = {
                         else
                             G.consumeables:emplace(c1)
                         end
-                        
+
                         G.CONTROLLER:save_cardarea_focus('jokers')
                         G.CONTROLLER:recall_cardarea_focus('jokers')
                         return true

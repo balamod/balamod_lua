@@ -3,8 +3,8 @@ local logging = require('logging')
 local logger = logging.getLogger('game')
 local balamod = require('balamod')
 
-local game_set_render_settings = game_set_render_settings or Game.set_render_settings
-local game_start_run = game_start_run or Game.start_run
+local game_set_render_settings = game_set_render_settings or Game.set_render_settings  -- luacheck: ignore
+local game_start_run = game_start_run or Game.start_run  -- luacheck: ignore
 
 function Game:set_render_settings()
     game_set_render_settings(self)

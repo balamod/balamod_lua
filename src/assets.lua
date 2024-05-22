@@ -23,7 +23,7 @@ local function getAtli(modId, textureScaling)
     local atliPath = "mods/" .. modId .. "/assets/textures/"..textureScaling.."x"
     local dir = love.filesystem.getDirectoryItems(atliPath)
     for i, path in ipairs(dir) do
-        local filename, extension = string.match(path, "([^/]+)%.(.+)$")
+        local filename, _ = string.match(path, "([^/]+)%.(.+)$")
         local name = modId .. "_" .. filename
         local image = love.graphics.newImage(atliPath.."/"..path, {mipmaps = true, dpiscale = textureScaling})
         local assetType = assetTypes[string.match(filename, "(.+)_")]

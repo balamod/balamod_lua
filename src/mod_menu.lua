@@ -1,6 +1,9 @@
 local balamod = require('balamod')
 local utils = require('utils')
 
+local mods_collection = {}
+local mods_collection_size = 0
+
 G.FUNCS.open_balamod_website = function(e)
     love.system.openURL('https://balamod.github.io/')
 end
@@ -45,7 +48,6 @@ G.FUNCS.install_mod = function(e)
 end
 
 G.UIDEF.mod_description = function(e)
-    local text_scale = 0.75
     local status_btn_id = 's_btn_' .. e.config.id
     local menu_btn_id = 'm_btn_' .. e.config.id
     local dl_up_btn_id = 'd_btn_' .. e.config.id
@@ -65,8 +67,12 @@ G.UIDEF.mod_description = function(e)
     local status_colour = mod.enabled and G.C.GREEN or G.C.RED
     local need_update = mod.needUpdate
     local new_version = need_update and 'New ' .. mod.newVersion or version
-    local show_download_btn = not mod_present or need_update
-    balamod.logger:debug('Mod: ', mod.name, ' present: ', mod_present, ' need update: ', need_update, ' new version: ', new_version)
+    balamod.logger:debug(
+        'Mod: ', mod.name,
+        ' present: ', mod_present,
+        ' need update: ', need_update,
+        ' new version: ', new_version
+    )
     local mod_description_text = {}
     for _, v in ipairs(mod.description) do
         mod_description_text[#mod_description_text + 1] = {
@@ -193,7 +199,7 @@ G.FUNCS.change_mod_description = function(e)
     end
 end
 
-G.UIDEF.mod_list_page = function(_page)
+G.UIDEF.mod_list_page = function(_page) -- luacheck: ignore
     local snapped = false
     local mod_list = {}
     local i = 0
@@ -241,16 +247,16 @@ G.FUNCS.change_mod_list_page = function(args)
     end
 end
 
-mods_collection = {}
-mods_collection_size = 0
-
 local function create_mod_tab_definition()
     G.MOD_PAGE_SIZE = 7
     mods_collection = {}
     mods_collection_size = 0
-    logger:debug('Mods collection generation with mods', utils.map(balamod.mods, function(mod) return mod.id end))
+    balamod.logger:debug(
+        'Mods collection generation with mods',
+        utils.map(balamod.mods, function(mod) return mod.id end)
+    )
     for mod_id, mod in pairs(balamod.mods) do
-        logger:trace('Trying to add mod ', mod_id, ' to collection')
+        balamod.logger:trace('Trying to add mod ', mod_id, ' to collection')
         if not mods_collection[mod_id] then
             mods_collection[mod_id] = mod
             mods_collection_size = mods_collection_size + 1
@@ -258,7 +264,7 @@ local function create_mod_tab_definition()
             balamod.logger:warn('Mod ' .. mod.name .. ' already in collection')
         end
     end
-    logger:debug('Mods collection before repoMods additions', utils.keys(mods_collection))
+    balamod.logger:debug('Mods collection before repoMods additions', utils.keys(mods_collection))
     for index, mod in ipairs(balamod.getRepoMods()) do
         local cur_mod = mods_collection[mod.id]
         if cur_mod == nil then

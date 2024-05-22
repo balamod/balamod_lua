@@ -1,4 +1,3 @@
-local balamod = require('balamod')
 local logging = require('logging')
 local logger = logging.getLogger("seal")
 local seal = {}
@@ -6,7 +5,6 @@ seal._VERSION = "0.1.0"
 seal.seals = {}
 seal.effects = {}
 seal.timings = {}
-local first_mod = true
 
 local function setData(args) --FIX OVERWRITING ON addSealInfotip CALLS
     local generate_card_ui_ref = generate_card_ui
@@ -88,7 +86,7 @@ local function setData(args) --FIX OVERWRITING ON addSealInfotip CALLS
                         }
                         full_UI_table.name = full_UI_table.name[1]
                     end
-                elseif card_type == 'Booster' then
+                elseif card_type == 'Booster' then -- luacheck: ignore
 
                 else
                     full_UI_table.name = localize {
@@ -209,7 +207,7 @@ local function setData(args) --FIX OVERWRITING ON addSealInfotip CALLS
                         vars = {specific_vars.bonus_chips}
                     }
                 end
-            elseif _c.set == 'Enhanced' then 
+            elseif _c.set == 'Enhanced' then
                 if specific_vars and _c.name ~= 'Stone Card' and specific_vars.nominal_chips then
                     localize{type = 'other', key = 'card_chips', nodes = desc_nodes, vars = {specific_vars.nominal_chips}}
                 end
@@ -317,7 +315,7 @@ local function setData(args) --FIX OVERWRITING ON addSealInfotip CALLS
                     }
                 end
             end
-            if first_pass and not (_c.set == 'Edition') and badges then
+            if first_pass and (_c.set ~= 'Edition') and badges then
                 for k, v in ipairs(badges) do
                     if v == 'foil' then
                         info_queue[#info_queue + 1] = G.P_CENTERS['e_foil']
@@ -366,7 +364,7 @@ local function setData(args) --FIX OVERWRITING ON addSealInfotip CALLS
     end
 end
 
--- Provided args: 
+-- Provided args:
 -- mod_id, color, description
 -- id = Seal name with no spaces,
 -- label = Seal name as you want it to appear in game,

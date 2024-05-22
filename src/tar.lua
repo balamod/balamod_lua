@@ -10,34 +10,6 @@ local math = require('math')
 
 local tar = {}
 local blocksize = 512
-local byte = string.byte
-
-
---- Strip the path off a path+filename.
--- @param pathname string: A path+name, such as "/a/b/c"
--- or "\a\b\c".
--- @return string: The filename without its path, such as "c".
-local function base_name(pathname)
-   assert(type(pathname) == "string")
-
-   local base = pathname:match(".*[/\\]([^/\\]*)")
-   return base or pathname
-end
-
---- Strip the name off a path+filename.
--- @param pathname string: A path+name, such as "/a/b/c".
--- @return string: The filename without its path, such as "/a/b/".
--- For entries such as "/a/b/", "/a/" is returned. If there are
--- no directory separators in input, "" is returned.
-local function dir_name(pathname)
-   assert(type(pathname) == "string")
-
-   return (pathname:gsub("/*$", ""):match("(.*/)[^/]*")) or ""
-end
-
-local function strip_base_dir(pathname)
-   return pathname:gsub("^[^/]*/", "")
-end
 
 -- trim5 from http://lua-users.org/wiki/StringTrim
 local function trim(s)
@@ -123,7 +95,7 @@ local function read_header_block(block)
     if header.version ~= "00" and header.version ~= " \0" then
         return false, "Unknown version "..header.version
     end
-    if not checksum_header(block) == header.chksum then
+    if checksum_header(block) ~= header.chksum then
         return false, "Failed header checksum"
     end
     return header
@@ -151,7 +123,7 @@ function tar.unpack(data)
     local longName = nil
     local longLinkName = nil
     local unpackedData = {}
-    local block = ""
+    local block
     repeat
         -- iterate by blocks of 512 bytes over the data
         block = readBlock(ptr, i, blocksize)

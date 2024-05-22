@@ -2,7 +2,7 @@
 
 local utils = require("utils")
 local logging = require("logging")
-local logger = logging.getLogger("deck")
+local logger = logging.getLogger("deck")  -- luacheck: ignore
 local math = require("math")
 
 
@@ -11,7 +11,7 @@ _MODULE._VERSION = "1.0.0"
 local decks = {}
 local GAME_BACKS = utils.copyTable(G.P_CENTER_POOLS.Back, true) -- copy the original table
 
-local function getNextOrder()
+local function getNextOrder()  -- luacheck: ignore
     local latestOrder = utils.reduce(
         G.P_CENTER_POOLS.Back,
         function(acc, deck)
@@ -24,7 +24,7 @@ end
 
 local function computeDeckOrders()
     local latestOrder = utils.reduce(
-        GAME_BACKS
+        GAME_BACKS,
         function(acc, deck)
             return math.max(acc, deck.order or 1)
         end,
@@ -41,7 +41,12 @@ local function add(deck_id, deck)
     computeDeckOrders()
     G.P_CENTERS[deck_id] = decks[deck_id]
     table.insert(G.P_CENTER_POOLS.Back, deck)
-    table.sort(self.P_CENTER_POOLS["Back"], function (a, b) return (a.order - (a.unlocked and 100 or 0)) < (b.order - (b.unlocked and 100 or 0)) end)
+    table.sort(
+        self.P_CENTER_POOLS["Back"],
+        function (a, b)
+            return (a.order - (a.unlocked and 100 or 0)) < (b.order - (b.unlocked and 100 or 0))
+        end
+    )
 end
 
 local function remove(deck_id)

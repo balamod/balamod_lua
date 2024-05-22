@@ -1,0 +1,15 @@
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lua Linting
+        uses: lunarmodules/luacheck@v1
+        with:
+          args: ./src
+
