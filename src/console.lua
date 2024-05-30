@@ -130,7 +130,17 @@ return {
         local text = {}
         local i = 1
         local textLength = 0
-        local all_messages = self:getFilteredMessages()
+
+		local base_messages = self:getFilteredMessages()
+        local all_messages = {}
+
+		for _, message in ipairs(base_messages) do
+			local wrappedLines = self:wrapText(message.text, love.graphics.getWidth() - 20)
+			for _, line in ipairs(wrappedLines) do
+				table.insert(all_messages, {text = line, level = message.level, name = message.name, time = message.time, level_numeric = message.level_numeric, formatted = function() return line end})
+			end
+		end
+
         while textLength < self.max_lines do
             local index = #all_messages - i + self.start_line_offset
             if index < 1 then
