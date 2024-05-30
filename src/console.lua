@@ -23,12 +23,12 @@ return {
         shift = false,
         ctrl = false,
         alt = false,
-        meta = false,
+        meta = false
     },
     commands = {},
     toggle = function(self)
         self.is_open = not self.is_open
-        love.keyboard.setKeyRepeat(self.is_open)  -- set key repeat to true when console is open
+        love.keyboard.setKeyRepeat(self.is_open) -- set key repeat to true when console is open
         if self.is_open then
             self.start_line_offset = self.max_lines - 1
             local oldTextInput = love.textinput
@@ -40,16 +40,13 @@ return {
         end
     end,
     longestCommonPrefix = function(self, strings)
-        if #strings == 0 then
-            return ""
-        end
+        if #strings == 0 then return "" end
         local prefix = strings[1]
         for i = 2, #strings do
             local str = strings[i]
             local j = 1
-            while j <= #prefix and j <= #str and prefix:sub(j, j) == str:sub(j, j) do
-                j = j + 1
-            end
+            while j <= #prefix and j <= #str and prefix:sub(j, j) ==
+                str:sub(j, j) do j = j + 1 end
             prefix = prefix:sub(1, j - 1)
         end
         return prefix
@@ -58,9 +55,7 @@ return {
         local command = self.cmd:sub(3) -- remove the "> " prefix
         local cmd = {}
         -- split command into parts
-        for part in command:gmatch("%S+") do
-            table.insert(cmd, part)
-        end
+        for part in command:gmatch("%S+") do table.insert(cmd, part) end
         if #cmd == 0 then
             -- no command typed, do nothing (no completions possible)
             logger:trace("No command typed")
@@ -82,10 +77,12 @@ return {
             local previousArgs = cmd
             local current_arg = table.remove(previousArgs)
             if command then
-                completions = command.autocomplete(current_arg, previousArgs) or {}
+                completions = command.autocomplete(current_arg, previousArgs) or
+                                  {}
             end
         end
-        logger:trace("Autocomplete matches: " .. #completions .. " " .. table.concat(completions, ", "))
+        logger:trace("Autocomplete matches: " .. #completions .. " " ..
+                         table.concat(completions, ", "))
         if #completions == 0 then
             -- no completions found
             return nil
@@ -96,25 +93,13 @@ return {
             return self:longestCommonPrefix(completions)
         end
     end,
-    getMessageColor = function (self, message)
-        if message.level == "PRINT" then
-            return 1, 1, 1
-        end
-        if message.level == "INFO" then
-            return 0, 0.9, 1
-        end
-        if message.level == "WARN" then
-            return 1, 0.5, 0
-        end
-        if message.level == "ERROR" then
-            return 1, 0, 0
-        end
-        if message.level == "DEBUG" then
-            return 0.16, 0, 1
-        end
-        if message.level == "TRACE" then
-            return 1, 1, 1
-        end
+    getMessageColor = function(self, message)
+        if message.level == "PRINT" then return 1, 1, 1 end
+        if message.level == "INFO" then return 0, 0.9, 1 end
+        if message.level == "WARN" then return 1, 0.5, 0 end
+        if message.level == "ERROR" then return 1, 0, 0 end
+        if message.level == "DEBUG" then return 0.16, 0, 1 end
+        if message.level == "TRACE" then return 1, 1, 1 end
         return 1, 1, 1
     end,
     getFilteredMessages = function(self)
@@ -131,21 +116,27 @@ return {
         local i = 1
         local textLength = 0
 
-		local base_messages = self:getFilteredMessages()
+        local base_messages = self:getFilteredMessages()
         local all_messages = {}
 
-		for _, message in ipairs(base_messages) do
-			local wrappedLines = self:wrapText(message.text, love.graphics.getWidth() - 20)
-			for _, line in ipairs(wrappedLines) do
-				table.insert(all_messages, {text = line, level = message.level, name = message.name, time = message.time, level_numeric = message.level_numeric, formatted = function() return line end})
-			end
-		end
+        for _, message in ipairs(base_messages) do
+            local wrappedLines = self:wrapText(message.text,
+                                               love.graphics.getWidth() - 20)
+            for _, line in ipairs(wrappedLines) do
+                table.insert(all_messages, {
+                    text = line,
+                    level = message.level,
+                    name = message.name,
+                    time = message.time,
+                    level_numeric = message.level_numeric,
+                    formatted = function() return line end
+                })
+            end
+        end
 
         while textLength < self.max_lines do
             local index = #all_messages - i + self.start_line_offset
-            if index < 1 then
-                break
-            end
+            if index < 1 then break end
             local message = all_messages[index]
             if message then
                 table.insert(text, message)
@@ -155,16 +146,23 @@ return {
         end
         -- define locally to not pollute the global namespace scope
         local function reverse(tab)
-            for i = 1, math.floor(#tab/2), 1 do
-                tab[i], tab[#tab-i+1] = tab[#tab-i+1], tab[i]
+            for i = 1, math.floor(#tab / 2), 1 do
+                tab[i], tab[#tab - i + 1] = tab[#tab - i + 1], tab[i]
             end
             return tab
         end
         text = reverse(text)
         -- pad text table so that we always have max_lines lines in there
         local nLinesToPad = #text - self.max_lines
-        for i=1,nLinesToPad do
-            table.insert(text, {text = "", level = "PRINT", name = "", time = 0, level_numeric = 1000, formatted = function() return "" end})
+        for i = 1, nLinesToPad do
+            table.insert(text, {
+                text = "",
+                level = "PRINT",
+                name = "",
+                time = 0,
+                level_numeric = 1000,
+                formatted = function() return "" end
+            })
         end
         return text
     end,
@@ -181,9 +179,12 @@ return {
             end
         end
     end,
-    typeKey = function (self, key_name)
+    typeKey = function(self, key_name)
         -- cmd+shift+C on mac, ctrl+shift+C on windows/linux
-        if key_name == "c" and ((platform.is_mac and self.modifiers.meta and self.modifiers.shift) or (not platform.is_mac and self.modifiers.ctrl and self.modifiers.shift)) then
+        if key_name == "c" and
+            ((platform.is_mac and self.modifiers.meta and self.modifiers.shift) or
+                (not platform.is_mac and self.modifiers.ctrl and
+                    self.modifiers.shift)) then
             local messages = self:getFilteredMessages()
             local text = ""
             for _, message in ipairs(messages) do
@@ -193,7 +194,8 @@ return {
             return
         end
         -- cmd+C on mac, ctrl+C on windows/linux
-        if key_name == "c" and ((platform.is_mac and self.modifiers.meta) or (not platform.is_mac and self.modifiers.ctrl)) then
+        if key_name == "c" and ((platform.is_mac and self.modifiers.meta) or
+            (not platform.is_mac and self.modifiers.ctrl)) then
             if self.cmd:sub(3) == "" then
                 -- do nothing if the buffer is empty
                 return
@@ -202,7 +204,8 @@ return {
             return
         end
         -- cmd+V on mac, ctrl+V on windows/linux
-        if key_name == "v" and ((platform.is_mac and self.modifiers.meta) or (not platform.is_mac and self.modifiers.ctrl)) then
+        if key_name == "v" and ((platform.is_mac and self.modifiers.meta) or
+            (not platform.is_mac and self.modifiers.ctrl)) then
             self.cmd = self.cmd .. love.system.getClipboardText()
             return
         end
@@ -212,40 +215,52 @@ return {
             return
         end
         -- Delete the current command, on mac it's cmd+backspace
-        if key_name == "delete" or (platform.is_mac and self.modifiers.meta and key_name == "backspace") then
+        if key_name == "delete" or
+            (platform.is_mac and self.modifiers.meta and key_name == "backspace") then
             self.cmd = "> "
             return
         end
-        if key_name == "end" or (platform.is_mac and key_name == "right" and self.modifiers.meta) then
+        if key_name == "end" or
+            (platform.is_mac and key_name == "right" and self.modifiers.meta) then
             -- move text to the most recent (bottom)
             self.start_line_offset = self.max_lines
             return
         end
-        if key_name == "home" or (platform.is_mac and key_name == "left" and self.modifiers.meta) then
+        if key_name == "home" or
+            (platform.is_mac and key_name == "left" and self.modifiers.meta) then
             -- move text to the oldest (top)
             local messages = self:getFilteredMessages()
             self.start_line_offset = self.max_lines - #messages
             return
         end
-        if key_name == "pagedown" or (platform.is_mac and key_name == "down" and self.modifiers.meta) then
+        if key_name == "pagedown" or
+            (platform.is_mac and key_name == "down" and self.modifiers.meta) then
             -- move text down by max_lines
-            self.start_line_offset = math.min(self.start_line_offset + self.max_lines, self.max_lines)
+            self.start_line_offset = math.min(
+                                         self.start_line_offset + self.max_lines,
+                                         self.max_lines)
             return
         end
-        if key_name == "pageup"  or (platform.is_mac and key_name == "up" and self.modifiers.meta) then
+        if key_name == "pageup" or
+            (platform.is_mac and key_name == "up" and self.modifiers.meta) then
             -- move text up by max_lines
             local messages = self:getFilteredMessages()
-            self.start_line_offset = math.max(self.start_line_offset - self.max_lines, self.max_lines - #messages)
+            self.start_line_offset = math.max(
+                                         self.start_line_offset - self.max_lines,
+                                         self.max_lines - #messages)
             return
         end
         if key_name == "up" then
             -- move to the next command in the history (in reverse order of insertion)
-            self.history_index = math.min(self.history_index + 1, #self.command_history)
+            self.history_index = math.min(self.history_index + 1,
+                                          #self.command_history)
             if self.history_index == 0 then
                 self.cmd = "> "
                 return
             end
-            self.cmd = "> " .. self.command_history[#self.command_history - self.history_index + 1]
+            self.cmd = "> " ..
+                           self.command_history[#self.command_history -
+                               self.history_index + 1]
             return
         end
         if key_name == "down" then
@@ -255,7 +270,9 @@ return {
                 self.cmd = "> "
                 return
             end
-            self.cmd = "> " .. self.command_history[#self.command_history - self.history_index + 1]
+            self.cmd = "> " ..
+                           self.command_history[#self.command_history -
+                               self.history_index + 1]
             return
         end
         if key_name == "tab" then
@@ -307,9 +324,7 @@ return {
             self.logger:print(self.cmd)
             local cmdName = self.cmd:sub(3)
             cmdName = cmdName:match("%S+")
-            if cmdName == nil then
-                return
-            end
+            if cmdName == nil then return end
             local args = {}
             local argString = self.cmd:sub(3 + #cmdName + 1)
             if argString then
@@ -333,15 +348,16 @@ return {
         end
     end,
     addToHistory = function(self, command)
-        if command == nil or command == "" then
-            return
-        end
+        if command == nil or command == "" then return end
         table.insert(self.command_history, command)
         self.history_index = 0
-        local success, errormsg = love.filesystem.append(self.history_path, command .. "\n")
+        local success, errormsg = love.filesystem.append(self.history_path,
+                                                         command .. "\n")
         if not success then
-            self.logger:warn("Error appending ", command, " to history file: ", errormsg)
-            success, errormsg = love.filesystem.write(self.history_path, command .. "\n")
+            self.logger:warn("Error appending ", command, " to history file: ",
+                             errormsg)
+            success, errormsg = love.filesystem.write(self.history_path,
+                                                      command .. "\n")
             if not success then
                 self.logger:error("Error writing to history file: ", errormsg)
             end
@@ -353,32 +369,41 @@ return {
     -- @param short_description: string, a short description of the command
     -- @param autocomplete: function(current_arg: string), a function that returns a list of possible completions for the current argument
     -- @param usage: string, a string describing the usage of the command (longer, more detailed description of the command's usage)
-    registerCommand = function(self, name, callback, short_description, autocomplete, usage)
+    registerCommand = function(self, name, callback, short_description,
+                               autocomplete, usage)
         if name == nil then
             self.logger:error("registerCommand -- name is required")
         end
         if callback == nil then
-            self.logger:error("registerCommand -- callback is required on command", name)
+            self.logger:error(
+                "registerCommand -- callback is required on command", name)
         end
         if type(callback) ~= "function" then
-            self.logger:error("registerCommand -- callback must be a function on command", name)
+            self.logger:error(
+                "registerCommand -- callback must be a function on command",
+                name)
         end
         if name == nil or callback == nil or type(callback) ~= "function" then
             return
         end
         if short_description == nil then
-            self.logger:warn("registerCommand -- no description provided, please provide a description for the `help` command")
+            self.logger:warn(
+                "registerCommand -- no description provided, please provide a description for the `help` command")
             short_description = "No help provided"
         end
-        if usage == nil then
-            usage = short_description
-        end
+        if usage == nil then usage = short_description end
         if autocomplete == nil then
-            autocomplete = function(current_arg, previous_args) return nil end
+            autocomplete = function(current_arg, previous_args)
+                return nil
+            end
         end
         if type(autocomplete) ~= "function" then
-            self.logger:warn("registerCommand -- autocomplete must be a function for command: ", name)
-            autocomplete = function(current_arg, previous_args) return nil end
+            self.logger:warn(
+                "registerCommand -- autocomplete must be a function for command: ",
+                name)
+            autocomplete = function(current_arg, previous_args)
+                return nil
+            end
         end
         if self.commands[name] then
             self.logger:warn("Command " .. name .. " already exists")
@@ -389,7 +414,7 @@ return {
             call = callback,
             desc = short_description,
             autocomplete = autocomplete,
-            usage = usage,
+            usage = usage
         }
     end,
     removeCommand = function(self, cmd_name)
@@ -416,5 +441,5 @@ return {
         end
         table.insert(lines, line)
         return lines
-    end,
+    end
 }
