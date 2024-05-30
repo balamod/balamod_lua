@@ -1074,100 +1074,48 @@ mods["dev_console"] = {
 				for i, t in ipairs(tables) do
 					for j, card in ipairs(t) do
 						if card.config then
-							logger:info("Changing " .. card.config.center.key)
+							logger:info("Enhancing " .. card.config.center.key)
 							
 							for k, enhancement in pairs(args) do
+								
+								for k, v in pairs(G.P_CENTER_POOLS["Default"]) do
+									local name = string.gsub(v.label, " ", "")
+									if enhancement == v.key or enhancement == name then
+										if (card.config.center.set == "Default" or card.config.center.set == "Enhanced") then
+											card:set_ability(G.P_CENTERS[v.key], nil, false)
+											logger:info("Card set to " .. v.label .. " (" .. card.config.center.key .. ").")
+										else
+											logger:info("Only standard cards should be set to " .. v.label .. " (" .. card.config.center.key .. ").")
+										end
+									end
+								end
 
-								if enhancement == "GoldCard" or enhancement == "m_gold" then
-									if (card.config.center.set == "Default" or card.config.center.set == "Enhanced") then
-										card:set_ability(G.P_CENTERS.m_gold, nil, false)
-										logger:info("Card set to Gold Card (" .. card.config.center.key .. ").")
-									else
-										logger:info("Only standard cards should be set to Gold Card (" .. card.config.center.key .. ").")
-									end
-								elseif enhancement == "BonusCard" or enhancement == "m_bonus" then
-									if (card.config.center.set == "Default" or card.config.center.set == "Enhanced") then
-										card:set_ability(G.P_CENTERS.m_bonus, nil, false)
-										logger:info("Card set to Bonus Card (" .. card.config.center.key .. ").")
-									else
-										logger:info("Only standard cards should be set to Bonus Card (" .. card.config.center.key .. ").")
-									end
-								elseif enhancement == "MultCard" or enhancement == "m_mult" then
-									if (card.config.center.set == "Default" or card.config.center.set == "Enhanced") then
-										card:set_ability(G.P_CENTERS.m_mult, nil, false)
-										logger:info("Card set to Mult Card (" .. card.config.center.key .. ").")
-									else
-										logger:info("Only standard cards should be set to Mult Card (" .. card.config.center.key .. ").")
-									end
-								elseif enhancement == "WildCard" or enhancement == "m_wild" then
-									if (card.config.center.set == "Default" or card.config.center.set == "Enhanced") then
-										card:set_ability(G.P_CENTERS.m_wild, nil, false)
-										logger:info("Card set to Wild Card (" .. card.config.center.key .. ").")
-									else
-										logger:info("Only standard cards should be set to Wild Card (" .. card.config.center.key .. ").")
-									end
-								elseif enhancement == "GlassCard" or enhancement == "m_glass" then
-									if (card.config.center.set == "Default" or card.config.center.set == "Enhanced") then
-										card:set_ability(G.P_CENTERS.m_glass, nil, false)
-										logger:info("Card set to Glass Card (" .. card.config.center.key .. ").")
-									else
-										logger:info("Only standard cards should be set to Glass Card (" .. card.config.center.key .. ").")
-									end
-								elseif enhancement == "SteelCard" or enhancement == "m_steel" then
-									if (card.config.center.set == "Default" or card.config.center.set == "Enhanced") then
-										card:set_ability(G.P_CENTERS.m_steel, nil, false)
-										logger:info("Card set to Steel Card (" .. card.config.center.key .. ").")
-									else
-										logger:info("Only standard cards should be set to Steel Card (" .. card.config.center.key .. ").")
-									end
-								elseif enhancement == "StoneCard" or enhancement == "m_stone" then
-									if (card.config.center.set == "Default" or card.config.center.set == "Enhanced") then
-										card:set_ability(G.P_CENTERS.m_stone, nil, false)
-										logger:info("Card set to Stone Card (" .. card.config.center.key .. ").")
-									else
-										logger:info("Only standard cards should be set to Stone Card (" .. card.config.center.key .. ").")
-									end
-								elseif enhancement == "LuckyCard" or enhancement == "m_lucky" then
-									if (card.config.center.set == "Default" or card.config.center.set == "Enhanced") then
-										card:set_ability(G.P_CENTERS.m_lucky, nil, false)
-										logger:info("Card set to Lucky Card (" .. card.config.center.key .. ").")
-									else
-										logger:info("Only standard cards should be set to Lucky Card (" .. card.config.center.key .. ").")
-									end
-								elseif string.sub(enhancement, 1, 2) == "m_" and G.P_CENTERS[enhancement] ~= nil then
-									if (card.config.center.set == "Default" or card.config.center.set == "Enhanced") then
-										card:set_ability(G.P_CENTERS[enhancement], nil, false)
-										logger:info("Card set to a " .. G.P_CENTERS[enhancement].name .. " (" .. card.config.center.key .. ").")
-									else
-										logger:info("Only standard cards should be set to " .. G.P_CENTERS[enhancement].name .. " (" .. card.config.center.key .. ").")
+								for k, v in pairs(G.P_CENTER_POOLS["Enhanced"]) do
+									local name = string.gsub(v.label, " ", "")
+									if enhancement == v.key or enhancement == name then
+										if (card.config.center.set == "Default" or card.config.center.set == "Enhanced") then
+											card:set_ability(G.P_CENTERS[v.key], nil, false)
+											logger:info("Card set to " .. v.label .. " (" .. card.config.center.key .. ").")
+										else
+											logger:info("Only standard cards should be set to " .. v.label .. " (" .. card.config.center.key .. ").")
+										end
 									end
 								end
 								
-								if string.sub(enhancement, -4) == "Seal" then
-									local seal = string.sub(enhancement, 1, -5)
-									card:set_seal(seal, true)
-									logger:info(seal .. " Seal added to card (" .. card.config.center.key .. ").")
+								for k, v in pairs(G.P_CENTER_POOLS["Edition"]) do
+									local name = string.gsub(v.name, " ", "")
+									if enhancement == v.key or enhancement == name then
+										local editionKey = string.sub(v.key, 3)
+										card:set_edition({ [editionKey] = true }, true)
+										logger:info("Card set to " .. v.name .. " edition (" .. card.config.center.key .. ").")
+									end
 								end
 
-								if enhancement == "Base" or enhancement == "e_base" then
-									card:set_edition({ }, true)
-									logger:info("Card set to base edition (" .. card.config.center.key .. ").")
-								elseif enhancement == "Negative" or enhancement == "e_negative" then
-									card:set_edition({ negative = true }, true)
-									logger:info("Card set to negative edition (" .. card.config.center.key .. ").")
-								elseif enhancement == "Foil" or enhancement == "e_foil" then
-									card:set_edition({ foil = true }, true)
-									logger:info("Card set to foil edition (" .. card.config.center.key .. ").")
-								elseif enhancement == "Poly" or enhancement == "Polychrome" or enhancement == "e_polychrome" then
-									card:set_edition({ polychrome = true }, true)
-									logger:info("Card set to polychrome edition (" .. card.config.center.key .. ").")
-								elseif enhancement == "Holo" or enhancement == "Holographic" or enhancement == "e_holo" then
-									card:set_edition({ holo = true }, true)
-									logger:info("Card set to holographic edition (" .. card.config.center.key .. ").")
-								elseif string.sub(enhancement, 1, 2) == "e_" and G.P_CENTERS[enhancement] ~= nil then
-									local editionKey = string.sub(enhancement, 3)
-									card:set_edition({ [editionKey] = true }, true)
-									logger:info("Card set to " .. G.P_CENTERS[enhancement].name .. " edition (" .. card.config.center.key .. ").")
+								for k, v in pairs(G.P_CENTER_POOLS["Seal"]) do
+									if enhancement == v.key .. "Seal" then
+										card:set_seal(v.key, true)
+										logger:info("Added " .. v.key .. " Seal to card (" .. card.config.center.key .. ").")
+									end
 								end
 								
 							end
@@ -1176,24 +1124,33 @@ mods["dev_console"] = {
 					end
 				end
 			end, 
-			"Add one or more enhancements to selected cards. Can use custom values.", 
+			"Add one or more enhancements to selected cards. Can use key or name (e.g. c_base or BaseCard, e_negative or Negative). Must add Seal to seals (e.g. RedSeal, BlueSeal)", 
 			function (current_arg)
-				local keys = {}
-				for key, value in pairs(G.P_CENTERS) do
-					if string.sub(key, 1, 2) == "e_" or string.sub(key, 1, 2) == "m_" then
-						table.insert(keys, key)
-					end
+				local subcommands = { }
+				
+				for k, v in pairs(G.P_CENTER_POOLS["Default"]) do
+					local name = string.gsub(v.label, " ", "")
+					table.insert(subcommands, v.key)
+					table.insert(subcommands, name)
 				end
 
-				local subcommands = { 
-					"GoldCard", "WildCard", "MultCard", "BonusCard", "GlassCard", "SteelCard", "StoneCard", "LuckyCard",
-					"RedSeal", "BlueSeal", "GoldSeal", "PurpleSeal", 
-					"Base", "Negative", "Foil", "Poly", "Holo"
-				}
-
-				for _, key in ipairs(keys) do
-					table.insert(subcommands, key)
+				for k, v in pairs(G.P_CENTER_POOLS["Enhanced"]) do
+					local name = string.gsub(v.label, " ", "")
+					table.insert(subcommands, v.key)
+					table.insert(subcommands, name)
 				end
+				
+				for k, v in pairs(G.P_CENTER_POOLS["Edition"]) do
+					local name = string.gsub(v.name, " ", "")
+					table.insert(subcommands, v.key)
+					table.insert(subcommands, name)
+				end
+				
+				for k, v in pairs(G.P_CENTER_POOLS["Seal"]) do
+					table.insert(subcommands, v.key .. "Seal")
+				end
+
+				logger:info(subcommands)
 
 				for i, v in ipairs(subcommands) do
 					if v:find(current_arg, 1, true) == 1 then
@@ -1202,7 +1159,7 @@ mods["dev_console"] = {
 				end
 				return nil
 			end, 
-			"Usage: enhance <GoldCard|WildCard|MultCard|BonusCard|GlassCard|SteelCard|StoneCard|LuckyCard|RedSeal|BlueSeal|GoldSeal|PurpleSeal|Base|Negative|Foil|Poly|Holo> [arg2] [arg3] ..."
+			"Usage: enhance <BaseCard|GoldCard|WildCard|MultCard|BonusCard|GlassCard|SteelCard|StoneCard|LuckyCard|RedSeal|BlueSeal|GoldSeal|PurpleSeal|Base|Negative|Foil|Polychrome|Holographic> [arg2] [arg3] ..."
 		)
 
         console.logger:debug("Dev Console on_enable completed")
