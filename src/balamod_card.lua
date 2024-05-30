@@ -4,6 +4,7 @@ local assets = require('assets')
 local logging = require('logging')
 local logger = logging.getLogger('card')
 local consumable = require("consumable")
+local utils = require('utils')
 
 -- references to original patched functions
 local card_calculate_joker = card_calculate_joker or Card.calculate_joker
@@ -60,7 +61,6 @@ function Card:calculate_joker(context)
 end
 
 function Card:generate_UIBox_ability_table()
-    local old_return = card_generate_uibox_ability_table(self)
     if self.config.center.balamod then
         local card_type = self.ability.set or "None"
         local hide_desc = nil
@@ -71,15 +71,15 @@ function Card:generate_UIBox_ability_table()
         (self.ability.set == 'Joker' or self.ability.set == 'Edition' or self.ability.consumeable or self.ability.set == 'Voucher' or self.ability.set == 'Booster') and
         not self.config.center.discovered and
         ((self.area ~= G.jokers and self.area ~= G.consumeables and self.area) or not self.area) then
-            return old_return
+            return card_generate_uibox_ability_table(self)
         elseif not self.config.center.unlocked and not self.bypass_lock then
-            return old_return
+            return card_generate_uibox_ability_table(self)
         elseif not self.config.center.discovered and not self.bypass_discovery_ui then
-            return old_return
+            return card_generate_uibox_ability_table(self)
         elseif self.debuff then
-            return old_return
+            return card_generate_uibox_ability_table(self)
         elseif card_type == 'Default' or card_type == 'Enhanced' then
-            return old_return
+            return card_generate_uibox_ability_table(self)
         elseif self.ability.set == 'Joker' then
             loc_vars = joker.loc_vars[self.config.center.balamod.key](self)
         end
@@ -106,10 +106,19 @@ function Card:generate_UIBox_ability_table()
         if self.pinned then badges[#badges + 1] = 'pinned_left' end
 
         if self.sticker then loc_vars = loc_vars or {}; loc_vars.sticker=self.sticker end
+        local ret = generate_card_ui(self.config.center, nil, loc_vars, card_type, badges, hide_desc, main_start, main_end)
 
-        return generate_card_ui(self.config.center, nil, loc_vars, card_type, badges, hide_desc, main_start, main_end)
+        -- insert tooltips
+        if self.config.center.balamod.tooltip then
+            for index, tt_node in ipairs(self.config.center.balamod.tooltip) do
+                local node = {name=tt_node.name}
+                localize{type='other', key=self.config.center.key.."tooltip"..tostring(index), nodes=node}
+                table.insert(ret.info, node)
+            end
+        end
+        return ret
     else
-        return old_return
+        return card_generate_uibox_ability_table(self)
     end
 end
 
@@ -125,11 +134,37 @@ function Card:set_sprites(_center, _front)
                 -- custom assets are single images, their pos is always 0,0
                 self.children.center:set_sprite_pos({ x = 0, y = 0 })
             else
+                -- table of vanilla sets to compare to
+                local vanilla_sets = {
+                    "Booster",
+                    "Default",
+                    "Enhanced",
+                    "Edition",
+                    "Joker",
+                    "Tarot",
+                    "Planet",
+                    "Tarot_Planet",
+                    "Spectral",
+                    "Consumeables",
+                    "Voucher",
+                    "Back",
+                    "Tag",
+                    "Seal",
+                    "Stake",
+                    "Demo",
+                }
                 -- We process the asset with the normal function
                 -- this is done to keep the default behavior of the game
                 -- we'll patvh the sprite afterwards, but in the meantime it
                 -- allows us to keep the locker/undiscovered logic
-                card_set_sprites(self, _center, _front)
+                if utils.contains(vanilla_sets, _center.set) then
+                    card_set_sprites(self, _center, _front)
+                elseif _center.consumeable then
+                    -- if _center is a modded consumable set, temporarily remove the consumeable tag
+                    _center.consumeable = false
+                    card_set_sprites(self, _center, _front)
+                    _center.consumeable = true
+                end
                 -- the sprite has been initialized, check that the center is unlocked
                 -- if the center is locked, or not discovered yet, we don't want to
                 -- use the custom asset (it should show the game images for locked/undiscovered)
@@ -372,9 +407,9 @@ function Card:calculate_dollar_bonus()
     if not self.debuff and self.ability.set == "Joker" then
         for _, effect in pairs(joker.dollarBonusEffects) do
             local status, new_return = pcall(effect, self)
-            if new_return then
+            if new_return then 
                 return new_return
-            end
+            end 
         end
     end
     return old_return
@@ -407,16 +442,25 @@ function Card:can_use_consumeable(any_state, skip_check)
     if not skip_check and ((G.play and #G.play.cards > 0) or
         (G.CONTROLLER.locked) or
         (G.GAME.STOP_USE and G.GAME.STOP_USE > 0))
-        then
-        return false
+        then  
+        return false 
     end
     if G.STATE ~= G.STATES.HAND_PLAYED and G.STATE ~= G.STATES.DRAW_TO_HAND and G.STATE ~= G.STATES.PLAY_TAROT or any_state then
-        for _, condition in pairs(consumable.useConditions) do
-            local status, new_return = pcall(condition, self, any_state, skip_check)
+        if consumable.useConditions[self.config.center.key] then
+            local status, new_return = pcall(consumable.useConditions[self.config.center.key], self, any_state, skip_check)
             if status and new_return then
                 return new_return
             end
         end
+        -- for k, condition in pairs(consumable.useConditions) do
+        --     local status, new_return = pcall(condition, self, any_state, skip_check)
+        --     if not status and new_return then
+        --         logger:warn(tostring(k).. " use_condition function error: ".. tostring(new_return))
+        --     end
+        --     if status and new_return then
+        --         return new_return
+        --     end
+        -- end
     end
     return old_return
 end

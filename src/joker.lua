@@ -1,14 +1,13 @@
 local balamod = require('balamod')
 
 local joker = {}
-joker._VERSION = "0.9.0"
+joker._VERSION = "0.9.1"
 joker.jokers = {}
 joker.calculateJokerEffects = {}
 joker.dollarBonusEffects = {}
 joker.addToDeckEffects = {}
 joker.removeFromDeckEffects = {}
 joker.loc_vars = {}
-
 local function add_joker(args)
     if not args.mod_id then logger:error("jokerAPI: mod_id REQUIRED when adding a joker"); return; end
     local id = args.id or "j_Joker_Placeholder" .. #G.P_CENTER_POOLS["Joker"] + 1
@@ -35,6 +34,7 @@ local function add_joker(args)
     local rarity = args.rarity or 1
     local blueprint_compat = args.blueprint_compat or true
     local eternal_compat = args.eternal_compat or true
+    local perishable_compat = args.perishable_compat or true
     local no_pool_flag = args.no_pool_flag or nil
     local yes_pool_flag = args.yes_pool_flag or nil
     local unlock_condition = args.unlock_condition or nil
@@ -45,13 +45,39 @@ local function add_joker(args)
     local add_to_deck_effect = args.add_to_deck_effect or function(_) end
     local remove_from_deck_effect = args.remove_from_deck_effect or function(_) end
     local enhancement_gate = args.enhancement_gate or nil
+    
+    local tooltip = nil
+    if args.tooltip then
+        if #args.tooltip == 0 then
+            logger:error("joker api: " .. id .. ": invalid tooltip format")
+            return false
+        end
+        for i=1, #args.tooltip do
+            if (not args.tooltip[i].name and not args.tooltip[i].text) then
+                logger:error("joker api: " .. id .. ": invalid tooltip format")
+                return false
+            end
+            local temp = args.tooltip
+            if not args.tooltip[i].text_parsed then
+                temp.text_parsed = {}
+                for _, line in ipairs(args.tooltip[i].text) do
+                    temp.text_parsed[#temp.text_parsed+1] = loc_parse_string(line)
+                end
+            end
+            G.localization.descriptions.Other[id.."tooltip"..tostring(i)] = temp
+        end
+        tooltip = args.tooltip
+    end
+    local extra = args.extra or nil
 
     --joker object
     local newJoker = {
         balamod = {
             mod_id = args.mod_id,
             key = id,
-            asset_key = args.mod_id .. "_" .. id
+            asset_key = args.mod_id .. "_" .. id,
+            tooltip = tooltip,
+            extra = extra,
         },
         order = order,
         discovered = discovered,
@@ -63,8 +89,8 @@ local function add_joker(args)
         effect = "",
         cost_mult = 1.0,
         config = config,
-        key = id,
-        rarity = rarity,
+        key = id, 
+        rarity = rarity, 
         unlocked = unlocked,
         blueprint_compat = blueprint_compat,
         eternal_compat = eternal_compat,
@@ -91,7 +117,7 @@ local function add_joker(args)
     for _, line in ipairs(newJokerText.unlock) do
         newJokerText.unlock_parsed[#newJokerText.unlock_parsed+1] = loc_parse_string(line)
     end
-
+    
     G.localization.descriptions.Joker[id] = newJokerText
 
 
@@ -107,7 +133,7 @@ local function add_joker(args)
 
     --save indices for removal
     joker.jokers[id] = {
-        pool_indices={#G.P_CENTER_POOLS["Joker"], #G.P_JOKER_RARITY_POOLS[rarity]},
+        pool_indices={#G.P_CENTER_POOLS["Joker"], #G.P_JOKER_RARITY_POOLS[rarity]}, 
     }
     return newJoker, newJokerText
 end
