@@ -1,3 +1,5 @@
 .DS_Store
 .idea/
 .vscode/
+src/balamod_version.lua
+src/https.dll
