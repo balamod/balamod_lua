@@ -991,7 +991,6 @@ mods['dev_console'] = {
                 for k, v in pairs(G.P_CENTER_POOLS['Booster']) do
                     if string.lower(v.key) == string.lower(arg) then
                         logger:info('Opening the ' .. v.key .. ' booster pack.')
-                        -- pull_pack(v.key, v.kind)
                         G.FUNCS.use_card({
                             config = {ref_table = Card(0, 0, 0, 0, G.P_CENTERS[v.key], G.P_CENTERS[v.key])}
                         })
