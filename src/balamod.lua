@@ -35,23 +35,23 @@ local function splitstring(inputstr, sep)
     if sep == nil then
         sep = "%s"
     end
-    local t = {}
-    for str in string.gmatch(inputstr, "([^" .. sep .. "]+)") do
+    local t={}
+    for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
         table.insert(t, str)
     end
     return t
 end
 
-function buildPaths(root, ignore)
+function buildPaths(root,ignore)
     local items = love.filesystem.getDirectoryItems(root)
     for _, file in ipairs(items) do
         if root ~= "" then
-            file = root .. "/" .. file
+            file = root.."/"..file
         end
         local info = love.filesystem.getInfo(file)
         if info then
             if info.type == "file" and file:match("%.lua$") then
-                table.insert(paths, file)
+                table.insert(paths,file)
             elseif info.type == "directory" then
                 local valid = true
                 for _, i in ipairs(ignore) do
@@ -60,7 +60,7 @@ function buildPaths(root, ignore)
                     end
                 end
                 if valid then
-                    buildPaths(file, ignore)
+                    buildPaths(file,ignore)
                 end
             end
         end
@@ -71,7 +71,7 @@ local function request(url)
     logger:debug('Request made with url: ', url)
     local code
     local response
-    code, response, headers = https.request(url, { headers = { ['User-Agent'] = 'Balamod-Client' } })
+    code, response, headers = https.request(url, {headers = {['User-Agent'] = 'Balamod-Client'}})
     if (code == 301 or code == 302) and headers.location then
         -- follow redirects if necessary
         code, response = request(headers.location)
@@ -318,7 +318,7 @@ local function validateManifest(modFolder, manifest)
             -- so we'll build a table that contains all of the patterns programatically
             -- we can at least match the operator with the [<>]=? pattern
             local patterns = {}
-            local versionPatterns = { '%d+', '%d+%.%d+', '%d+%.%d+%.%d+' }
+            local versionPatterns = {'%d+', '%d+%.%d+', '%d+%.%d+%.%d+'}
             for _, versionPattern1 in ipairs(versionPatterns) do
                 for _, versionPattern2 in ipairs(versionPatterns) do
                     table.insert(patterns, '[<>]=?' .. versionPattern1 .. ', ?[<>]=?' .. versionPattern2)
@@ -332,7 +332,7 @@ local function validateManifest(modFolder, manifest)
                 end
             end
             if not versionConstraintCorrect then
-                table.insert(incorrectDependencies, modId .. ':' .. version)
+                table.insert(incorrectDependencies, modId..':'..version)
             end
         end
         if #incorrectDependencies > 0 then
@@ -360,9 +360,9 @@ local function loadMod(modFolder)
         logger:error('Mod folder ', modFolder, ' does not contain a manifest.json file')
         return nil
     end
-    logger:debug("Loading manifest from: ", 'mods/' .. modFolder .. '/manifest.json')
+    logger:debug("Loading manifest from: ", 'mods/'..modFolder..'/manifest.json')
     -- load the manifest
-    local manifest = json.decode(love.filesystem.read('mods/' .. modFolder .. '/manifest.json'))
+    local manifest = json.decode(love.filesystem.read('mods/'..modFolder..'/manifest.json'))
     if not validateManifest(modFolder, manifest) then
         return nil
     end
@@ -383,8 +383,8 @@ local function loadMod(modFolder)
         end
     end
     -- load the hooks (on_enable, on_game_load, etc...)
-    logger:debug("Loading hooks from: ", 'mods/' .. modFolder .. '/main.lua')
-    local modHooks = require('mods/' .. modFolder .. '/main')
+    logger:debug("Loading hooks from: ", 'mods/'..modFolder..'/main.lua')
+    local modHooks = require('mods/'..modFolder..'/main')
     for hookName, hook in pairs(modHooks) do
         mod[hookName] = hook
     end
@@ -432,120 +432,14 @@ local function callModCallbacksIfExists(mods, callback_name, should_log, ...)
             if not status then
                 logger:warn("Callback", callback_name, "for mod ", mod.id, "failed: ", message)
             else
-                table.insert(mod_returns, { modId = mod.id, result = message })
+                table.insert(mod_returns, {modId = mod.id, result = message})
             end
         end
     end
     return mod_returns
 end
 
-local function installMod(modInfo)
-    -- TODO: when installing a mod, also install its dependencies
-    -- we need to fetch all of the dependencies of a mod from the repo index
-    -- then install the correct version of the dependency
-    -- we also need to make sure to check that the dependency version constraints are satisfied
-    -- if the constraints cannot be resolved, then the installation should fail with a status code
-    -- that way, we can ensure that the mod, and its dependencies are installed correctly without conflicts
-    -- as long as the mod authors follow the semantic versioning rules, that is...
-    if modInfo == nil then
-        logger:error('modInfo is nil')
-        return RESULT.MOD_NOT_FOUND_IN_REPOS
-    end
-    local modId = modInfo.id
-    if modInfo.present then
-        logger:debug('Mod ' .. modInfo.id .. ' is already present')
-        local modVersion = modInfo.newVersion
-        if not modInfo.needUpdate then
-            return RESULT.SUCCESS
-        end
-
-        -- remove old mod
-        for i, mod in ipairs(mods) do
-            if mod.id == modId then
-                if mod.on_disable then
-                    mod.on_disable()
-                end
-
-                table.remove(mods, i)
-                break
-            end
-        end
-    end
-
-    logger:debug('Downloading mod ' .. modInfo.id)
-    local modUrl = modInfo.url
-
-    local code, body = request(modUrl)
-    if code ~= 200 and code ~= 302 then
-        logger:error('Request failed')
-        logger:error('Code: ' .. code)
-        logger:error('Response: ' .. body)
-        return RESULT.NETWORK_ERROR
-    end
-    logger:debug('Downloaded tarball with body ', body)
-
-    -- decompress the archive in memory
-    local decompressedData = love.data.decompress("data", "gzip", body)
-    local success, result = pcall(tar.unpack, decompressedData)
-    if not success then
-        logger:error('Error decompressing tarball')
-        logger:error(result)
-        return RESULT.TAR_DECOMPRESS_ERROR
-    end
-
-    -- result should be a table of tables with the following structure:
-    -- {
-    --   name = path to the file/directory
-    --   data = fileData
-    --   type = "file" | "directory"
-    -- }
-    -- sort the result table so that directories are processed first
-    table.sort(result, function(a, b)
-        return a.type < b.type
-    end)
-    -- check that the downloaded mod contains a main.lua file as well as a manifest.json file
-    local mainLua = false
-    local manifestJson = false
-    for _, file in ipairs(result) do
-        if file.type == "file" then
-            -- file.name is a path, we only want the filename
-            local _, _, filename = file.name:find(".+/(.+)")
-            if filename == "main.lua" then
-                mainLua = true
-            end
-            if filename == "manifest.json" then
-                manifestJson = true
-            end
-        end
-    end
-    if not mainLua then
-        logger:error('Downloaded mod does not contain a main.lua file')
-        return RESULT.MOD_NOT_CONFORM
-    end
-    if not manifestJson then
-        logger:error('Downloaded mod does not contain a manifest.json file')
-        return RESULT.MOD_NOT_CONFORM
-    end
-    for _, file in ipairs(result) do
-        -- replace the first part of file.name with the modId
-        file.name = modId .. file.name:sub(file.name:find("/"))
-        if file.type == "directory" then
-            love.filesystem.createDirectory("mods/" .. file.name)
-        elseif file.type == "file" then
-            love.filesystem.write("mods/" .. file.name, file.data)
-        end
-    end
-
-    local mod = loadMod(modId)
-    if mod == nil then
-        return RESULT.MOD_FS_LOAD_ERROR
-    end
-    mods[modId] = mod
-    mods = sortMods(mods)
-    return RESULT.SUCCESS
-end
-
-buildPaths("", { "mods", "apis", "resources", "localization" })
+buildPaths("",{"mods","apis","resources","localization"})
 -- current_game_code = love.filesystem.read(path)
 buildPaths = nil -- prevent rerunning (i think)
 
@@ -554,18 +448,15 @@ for _, path in ipairs(paths) do
     current_game_code[path] = love.filesystem.read(path)
 end
 
-if not love.filesystem.getInfo("mods", "directory") then
-    -- Create mods folder if it doesn't exist
+if not love.filesystem.getInfo("mods", "directory") then -- Create mods folder if it doesn't exist
     love.filesystem.createDirectory("mods")
 end
 
-if not love.filesystem.getInfo("logs", "directory") then
-    -- Create logs folder if it doesn't exist
+if not love.filesystem.getInfo("logs", "directory") then -- Create logs folder if it doesn't exist
     love.filesystem.createDirectory("logs")
 end
 
-if not love.filesystem.getInfo("apis", "directory") then
-    -- Create apis folder if it doesn't exist
+if not love.filesystem.getInfo("apis", "directory") then -- Create apis folder if it doesn't exist
     love.filesystem.createDirectory("apis")
 end
 
@@ -725,7 +616,7 @@ mods["dev_console"] = {
                 "Give an item to the player",
                 function(current_arg)
                     local ret = {}
-                    for k, _ in pairs(G.P_CENTERS) do
+                    for k,_ in pairs(G.P_CENTERS) do
                         if string.find(k, current_arg) == 1 then
                             table.insert(ret, k)
                         end
@@ -765,11 +656,11 @@ mods["dev_console"] = {
                     return true
                 end,
                 "Change the player's money",
-                function(current_arg)
-                    local subcommands = { "add", "remove", "set" }
+                function (current_arg)
+                    local subcommands = {"add", "remove", "set"}
                     for i, v in ipairs(subcommands) do
                         if v:find(current_arg, 1, true) == 1 then
-                            return { v }
+                            return {v}
                         end
                     end
                     return nil
@@ -808,11 +699,11 @@ mods["dev_console"] = {
                     return true
                 end,
                 "Change the player's discards",
-                function(current_arg)
-                    local subcommands = { "add", "remove", "set" }
+                function (current_arg)
+                    local subcommands = {"add", "remove", "set"}
                     for i, v in ipairs(subcommands) do
                         if v:find(current_arg, 1, true) == 1 then
-                            return { v }
+                            return {v}
                         end
                     end
                     return nil
@@ -851,11 +742,11 @@ mods["dev_console"] = {
                     return true
                 end,
                 "Change the player's remaining hands",
-                function(current_arg)
-                    local subcommands = { "add", "remove", "set" }
+                function (current_arg)
+                    local subcommands = {"add", "remove", "set"}
                     for i, v in ipairs(subcommands) do
                         if v:find(current_arg, 1, true) == 1 then
-                            return { v }
+                            return {v}
                         end
                     end
                     return nil
@@ -904,7 +795,7 @@ mods["dev_console"] = {
                     return true
                 end,
                 "Reload a mod using its id",
-                function(current_arg)
+                function (current_arg)
                     local completions = {}
                     for modId, _ in pairs(mods) do
                         if modId:find(current_arg, 1, true) == 1 then
@@ -918,12 +809,12 @@ mods["dev_console"] = {
 
         console:registerCommand(
                 "sandbox",
-                function(args)
+                function (args)
                     G:sandbox()
                     return true
                 end,
                 "Goes to the sandbox stage",
-                function(current_arg)
+                function (current_arg)
                     return nil
                 end,
                 "Usage: sandbox"
@@ -931,7 +822,7 @@ mods["dev_console"] = {
 
         console:registerCommand(
                 "luarun",
-                function(args)
+                function (args)
                     local code = table.concat(args, " ")
                     local func, err = load(code)
                     if func then
@@ -944,15 +835,16 @@ mods["dev_console"] = {
                     end
                 end,
                 "Run lua code in the context of the game",
-                function(current_arg)
+                function (current_arg)
                     return nil
                 end,
                 "Usage: luarun <lua_code>"
         )
 
         console:registerCommand(
+        -- TODO: change with balalib
                 "installmod",
-                function(args)
+                function (args)
                     local url = args[1]
                     local modInfo = {
                         id = "testmod",
@@ -970,7 +862,7 @@ mods["dev_console"] = {
                     end
                 end,
                 "Install a mod from a tarball",
-                function(current_arg)
+                function (current_arg)
                     return nil
                 end,
                 "Usage: installmod <mod_url>"
@@ -991,7 +883,7 @@ mods["dev_console"] = {
         console.removeCommand("hands")
         console.logger:debug("Dev Console disabled")
     end,
-    on_key_pressed = function(key_name)
+    on_key_pressed = function (key_name)
         if key_name == "f2" then
             console:toggle()
             return true
@@ -1011,7 +903,7 @@ mods["dev_console"] = {
         end
         return false
     end,
-    on_post_render = function()
+    on_post_render = function ()
         console.max_lines = math.floor(love.graphics.getHeight() / console.line_height) - 5  -- 5 lines of bottom padding
         local font = love.graphics.getFont()
         if console.is_open then
@@ -1038,7 +930,7 @@ mods["dev_console"] = {
             love.graphics.print(console.cmd, 10, love.graphics.getHeight() - 30)
         end
     end,
-    on_key_released = function(key_name)
+    on_key_released = function (key_name)
         if key_name == "capslock" then
             console.modifiers.capslock = not console.modifiers.capslock
             console:modifiersListener()
@@ -1103,16 +995,14 @@ local function sortMods(mods)
     end
     logger:trace('Graph generated', graph)
     for modId, mod in pairs(mods) do
-        for i, before in ipairs(mod.load_before or {}) do
-            -- load_before is a list of mod ids, if its nil, use an empty table to avoid a crash
+        for i, before in ipairs(mod.load_before or {}) do -- load_before is a list of mod ids, if its nil, use an empty table to avoid a crash
             if not graph[before] then
                 logger:error('Mod ', mod.id, ' has a load_before field that references a non-existent mod: ', before)
                 return nil
             end
             graph[modId].before[before] = true  -- we set to true just because we want a table behaving like a set() instead of an array
         end
-        for i, after in ipairs(mod.load_after or {}) do
-            -- load_after is a list of mod ids
+        for i, after in ipairs(mod.load_after or {}) do -- load_after is a list of mod ids
             -- load_after is there to ensure that a mod is loaded after another mod
             -- this is equivalent to the other mod being loaded before the current mod
             -- so we add an edge from the other mod to the current mod
@@ -1173,7 +1063,6 @@ return {
     logger = logger,
     mods = mods,
     apis = apis,
-    installMod = installMod,
     isModPresent = isModPresent,
     RESULT = RESULT,
     inject = inject,
