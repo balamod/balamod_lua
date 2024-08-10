@@ -420,6 +420,7 @@ mods["dev_console"] = {
     author = "sbordeyne & UwUDev",
     description = {
         "Press F2 to open/close the console",
+        "Press F1 to restart the game",
         "Use command `help` for a list of ",
         "available commands and shortcuts",
     },
@@ -486,6 +487,7 @@ mods["dev_console"] = {
                 function()
                     console.logger:print("Available shortcuts:")
                     console.logger:print("F2: Open/Close the console")
+                    console.logger:print("F1: Restart the game")
                     console.logger:print("F4: Toggle debug mode")
                     if platform.is_mac then
                         console.logger:print("Cmd+C: Copy the current command to the clipboard.")
@@ -837,6 +839,10 @@ mods["dev_console"] = {
     on_key_pressed = function (key_name)
         if key_name == "f2" then
             console:toggle()
+            return true
+        end
+        if key_name == "f1" then
+            balalib.restart()
             return true
         end
         if console.is_open then
