@@ -69,18 +69,18 @@ G.UIDEF.mod_description = function(e)
         }
     end
     local mod_description = {{
-        n = G.UIT.R,
-        config = {align = 'tm', padding = 0.1, minh = 0.5},
-        nodes = {mod_present and {
-            n = G.UIT.C,
-            config = {align = 'cm', r = 0.1, padding = 0.1, colour = G.C.GREEN},
-            nodes = {{n = G.UIT.T, config = {text = author, scale = 0.4, colour = G.C.WHITE, shadow = true}}}
-        } or nil, {
-            n = G.UIT.C,
-            config = {align = 'cm', r = 0.1, padding = 0.1, colour = G.C.PURPLE},
-            nodes = {{n = G.UIT.T, config = {text = version, scale = 0.4, colour = G.C.WHITE, shadow = true}}}
-        }}
-    }, {n = G.UIT.R, config = {align = 'tm', minh = 3, padding = 0.1}, nodes = mod_description_text}}
+                                 n = G.UIT.R,
+                                 config = {align = 'tm', padding = 0.1, minh = 0.5},
+                                 nodes = {mod_present and {
+                                     n = G.UIT.C,
+                                     config = {align = 'cm', r = 0.1, padding = 0.1, colour = G.C.GREEN},
+                                     nodes = {{n = G.UIT.T, config = {text = author, scale = 0.4, colour = G.C.WHITE, shadow = true}}}
+                                 } or nil, {
+                                              n = G.UIT.C,
+                                              config = {align = 'cm', r = 0.1, padding = 0.1, colour = G.C.PURPLE},
+                                              nodes = {{n = G.UIT.T, config = {text = version, scale = 0.4, colour = G.C.WHITE, shadow = true}}}
+                                          }}
+                             }, {n = G.UIT.R, config = {align = 'tm', minh = 3, padding = 0.1}, nodes = mod_description_text}}
     local mod_description_btns = {
         n = G.UIT.R,
         config = {align = 'cm', minh = 0.9, padding = 0.1},
@@ -98,9 +98,9 @@ G.UIDEF.mod_description = function(e)
                 id = status_btn_id
             },
             nodes = {{
-                n = G.UIT.T,
-                config = {text = mod_present and status_text or 'Download', scale = 0.5, colour = G.C.UI.TEXT_LIGHT}
-            }}
+                         n = G.UIT.T,
+                         config = {text = mod_present and status_text or 'Download', scale = 0.5, colour = G.C.UI.TEXT_LIGHT}
+                     }}
         } or nil, (mod_present and menu) and {
             n = G.UIT.C,
             config = {
@@ -129,23 +129,23 @@ G.UIDEF.mod_description = function(e)
                 id = dl_up_btn_id
             },
             nodes = {{
-                n = G.UIT.T,
-                config = {text = mod_present and new_version or 'Download', scale = 0.5, colour = G.C.UI.TEXT_LIGHT}
-            }}
+                         n = G.UIT.T,
+                         config = {text = mod_present and new_version or 'Download', scale = 0.5, colour = G.C.UI.TEXT_LIGHT}
+                     }}
         } or nil}
     }
     local mod_description_frame = {
         n = G.UIT.C,
         config = {align = 'cm', minw = 3, r = 0.1, colour = mod_present and G.C.BLUE or G.C.ORANGE},
         nodes = {{
-            n = G.UIT.R,
-            config = {align = 'cm', padding = 0.08, minh = 0.6},
-            nodes = {{n = G.UIT.T, config = {text = mod.name, scale = 0.5, colour = G.C.UI.TEXT_LIGHT, shadow = true}}}
-        }, {
-            n = G.UIT.R,
-            config = {align = 'cm', minh = 4, minw = 6.8, maxw = 6.7, padding = 0.05, r = 0.1, colour = G.C.WHITE},
-            nodes = mod_description
-        }, mod_description_btns}
+                     n = G.UIT.R,
+                     config = {align = 'cm', padding = 0.08, minh = 0.6},
+                     nodes = {{n = G.UIT.T, config = {text = mod.name, scale = 0.5, colour = G.C.UI.TEXT_LIGHT, shadow = true}}}
+                 }, {
+                     n = G.UIT.R,
+                     config = {align = 'cm', minh = 4, minw = 6.8, maxw = 6.7, padding = 0.05, r = 0.1, colour = G.C.WHITE},
+                     nodes = mod_description
+                 }, mod_description_btns}
     }
     return {
         n = G.UIT.ROOT,
@@ -179,13 +179,14 @@ G.FUNCS.change_mod_description = function(e)
     end
 end
 
-G.UIDEF.mod_list_page = function(_page)
+G.UIDEF.mod_list_page = function(page)
     local snapped = false
     local mod_list = {}
-    local i = 0
-    for mod_id, mod in pairs(mods_collection) do
-        balamod.logger:debug('Mod index ' .. i .. ' page ' .. _page .. ' name ' .. mod.name .. ' id ' .. mod.id)
-        if i > G.MOD_PAGE_SIZE * (_page or 0) and i <= G.MOD_PAGE_SIZE * ((_page or 0) + 1) then
+    local i = 1
+    print("Collection size", mods_collection_size)
+    for _, mod in pairs(mods_collection) do
+        balamod.logger:debug('Mod index ' .. i .. ' page ' .. page .. ' name ' .. mod.name .. ' id ' .. mod.id)
+        if i > G.MOD_PAGE_SIZE * (page or 0) and i <= G.MOD_PAGE_SIZE * ((page or 0) + 1) then
             if G.CONTROLLER.focused.target and G.CONTROLLER.focused.target.config.id == 'mod_page' then
                 snapped = true
             end
@@ -245,7 +246,7 @@ local function create_mod_tab_definition()
         end
     end
     logger:debug('Mods collection before repoMods additions', utils.keys(mods_collection))
-    for index, mod in ipairs(balalib.fetch_mods()) do
+    for _, mod in ipairs(balalib.fetch_mods()) do
         local cur_mod = mods_collection[mod.id]
         if cur_mod == nil then
             mods_collection[mod.id] = mod
@@ -258,7 +259,7 @@ local function create_mod_tab_definition()
     local mod_pages = {}
     for i = 1, math.ceil(mods_collection_size / G.MOD_PAGE_SIZE) do
         table.insert(mod_pages, localize('k_page') .. ' ' .. tostring(i) .. '/' ..
-                         tostring(math.ceil(mods_collection_size / G.MOD_PAGE_SIZE)))
+                tostring(math.ceil(mods_collection_size / G.MOD_PAGE_SIZE)))
     end
     G.E_MANAGER:add_event(Event({
         func = (function()
@@ -271,34 +272,34 @@ local function create_mod_tab_definition()
         n = G.UIT.ROOT,
         config = {align = 'cm', padding = 0.05, colour = G.C.BLACK, r = 0.1, emboss = 0.05, minh = 6, minw = 6},
         nodes = {{
-            n = G.UIT.C,
-            config = {align = 'cm', padding = 0.0},
-            nodes = {{
-                n = G.UIT.R,
-                config = {align = 'cm', padding = 0.1, minh = 5, minw = 4, colour = G.C.CLEAR},
-                nodes = {{n = G.UIT.O, config = {id = 'mod_list', object = Moveable()}}}
-            }, {
-                n = G.UIT.R,
-                config = {align = 'cm', padding = 0.1, minh = 1, minw = 4},
-                nodes = {create_option_cycle({
-                    id = 'mod_page',
-                    scale = 0.9,
-                    h = 0.5,
-                    w = 3,
-                    options = mod_pages,
-                    cycle_shoulders = false,
-                    opt_callback = 'change_mod_list_page',
-                    current_option = 1,
-                    colour = G.C.RED,
-                    no_pips = true,
-                    focus_args = {snap_to = true}
-                })}
-            }}
-        }, {
-            n = G.UIT.C,
-            config = {align = 'cm', minh = 5, minw = 7},
-            nodes = {{n = G.UIT.O, config = {id = 'mod_area', object = Moveable()}}}
-        }}
+                     n = G.UIT.C,
+                     config = {align = 'cm', padding = 0.0},
+                     nodes = {{
+                                  n = G.UIT.R,
+                                  config = {align = 'cm', padding = 0.1, minh = 5, minw = 4, colour = G.C.CLEAR},
+                                  nodes = {{n = G.UIT.O, config = {id = 'mod_list', object = Moveable()}}}
+                              }, {
+                                  n = G.UIT.R,
+                                  config = {align = 'cm', padding = 0.1, minh = 1, minw = 4},
+                                  nodes = {create_option_cycle({
+                                      id = 'mod_page',
+                                      scale = 0.9,
+                                      h = 0.5,
+                                      w = 3,
+                                      options = mod_pages,
+                                      cycle_shoulders = false,
+                                      opt_callback = 'change_mod_list_page',
+                                      current_option = 1,
+                                      colour = G.C.RED,
+                                      no_pips = true,
+                                      focus_args = {snap_to = true}
+                                  })}
+                              }}
+                 }, {
+                     n = G.UIT.C,
+                     config = {align = 'cm', minh = 5, minw = 7},
+                     nodes = {{n = G.UIT.O, config = {id = 'mod_area', object = Moveable()}}}
+                 }}
     }
 end
 
@@ -320,9 +321,9 @@ local function create_mod_credits_definition()
             n = G.UIT.R,
             config = {align = 'cl', padding = 0.1},
             nodes = {{
-                n = G.UIT.T,
-                config = {text = v, scale = text_scale * 0.5, colour = G.C.UI.TEXT_LIGHT, shadow = true}
-            }}
+                         n = G.UIT.T,
+                         config = {text = v, scale = text_scale * 0.5, colour = G.C.UI.TEXT_LIGHT, shadow = true}
+                     }}
         }
     end
     local linkButtons = {}
@@ -359,49 +360,49 @@ local function create_mod_credits_definition()
         n = G.UIT.ROOT,
         config = {align = 'cm', padding = 0.2, colour = G.C.BLACK, r = 0.1, emboss = 0.05, minh = 4},
         nodes = {{
-            n = G.UIT.R,
-            config = {
-                align = 'cm',
-                padding = 0.1,
-                outline_colour = G.C.JOKER_GREY,
-                r = 0.1,
-                outline = 1,
-                minw = 4
-            },
-            nodes = {
-                {
-                    n = G.UIT.R,
-                    config = {align = 'cm', padding = 0.1},
-                    nodes = {create_badge('Balamod', G.C.DARK_EDITION, G.C.UI.TEXT_LIGHT, 1.5)}
-                },
-                {
-                    n = G.UIT.R, config = {align = 'cl', padding = 0}, nodes = credits_text
-                },
-                {
-                    n = G.UIT.R,
-                    config = {align = 'cm', padding = 0.1, colour = G.C.CLEAR},
-                    nodes = linkButtons,
-                },
-            }
-        }}
+                     n = G.UIT.R,
+                     config = {
+                         align = 'cm',
+                         padding = 0.1,
+                         outline_colour = G.C.JOKER_GREY,
+                         r = 0.1,
+                         outline = 1,
+                         minw = 4
+                     },
+                     nodes = {
+                         {
+                             n = G.UIT.R,
+                             config = {align = 'cm', padding = 0.1},
+                             nodes = {create_badge('Balamod', G.C.DARK_EDITION, G.C.UI.TEXT_LIGHT, 1.5)}
+                         },
+                         {
+                             n = G.UIT.R, config = {align = 'cl', padding = 0}, nodes = credits_text
+                         },
+                         {
+                             n = G.UIT.R,
+                             config = {align = 'cm', padding = 0.1, colour = G.C.CLEAR},
+                             nodes = linkButtons,
+                         },
+                     }
+                 }}
     }
 end
 
 G.UIDEF.mods = function()
     return create_UIBox_generic_options({
         contents = {{
-            n = G.UIT.R,
-            config = {align = 'cm', padding = 0},
-            nodes = {
-                create_tabs({
-                    tabs = {
-                        {label = 'Mods', chosen = true, tab_definition_function = create_mod_tab_definition},
-                        {label = 'Credits', tab_definition_function = create_mod_credits_definition, },
-                    },
-                    snap_to_nav = true
-                })
-            }
-        }}
+                        n = G.UIT.R,
+                        config = {align = 'cm', padding = 0},
+                        nodes = {
+                            create_tabs({
+                                tabs = {
+                                    {label = 'Mods', chosen = true, tab_definition_function = create_mod_tab_definition},
+                                    {label = 'Credits', tab_definition_function = create_mod_credits_definition, },
+                                },
+                                snap_to_nav = true
+                            })
+                        }
+                    }}
     })
 end
 
