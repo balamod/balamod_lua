@@ -3,15 +3,11 @@ local logging = require('logging')
 local utils = require('utils')
 local logger = logging.getLogger('patches')
 
-local modFolders = love.filesystem.getDirectoryItems("mods") -- Load all mods
-logger:info("Loading mods from folders ", modFolders)
-for _, modFolder in ipairs(modFolders) do
-    if love.filesystem.getInfo("mods/" .. modFolder, "directory") then
-        local mod = balamod.loadMod(modFolder)
-        if mod ~= nil then
-            balamod.mods[mod.id] = mod
-            logger:info("Loaded mod: ", mod.id)
-        end
+logger:info("Loading mods from folders ")
+for _, mod in ipairs(balalib.get_local_mods()) do
+    if mod ~= nil then
+        balamod.mods[mod.id] = mod
+        logger:info("Loaded mod: ", mod.id)
     end
 end
 local status, sortedMods = pcall(balamod.sortMods, balamod.mods)
