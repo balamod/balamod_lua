@@ -1,4 +1,3 @@
-local json = require('json')
 local balamod = require('balamod')
 local utils = require('utils')
 local logging = require('logging')
@@ -29,9 +28,10 @@ local function getModLocale(mod, locale)
         logger:trace("Locale file does not exist: ", pathToLocale)
         return getModLocale(mod, 'en-us')  -- try to fallback to the english locale
     end
-    local modLocale = json.decode(love.filesystem.read(pathToLocale))
-    logger:info("Loaded locale for mod ", mod.id, " and locale ", locale, ": ", modLocale)
-    return modLocale
+    --local modLocale = json.decode(love.filesystem.read(pathToLocale))
+    --logger:info("Loaded locale for mod ", mod.id, " and locale ", locale, ": ", modLocale)
+    -- TODO: implement in balalib
+    return nil
 end
 
 local function inject()

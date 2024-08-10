@@ -3,9 +3,7 @@ local logging = require('logging')
 local platform = require('platform')
 local math = require('math')
 local console = require('console')
-local json = require('json')
 local utils = require('utils')
-local tar = require('tar')
 local https = require('https')
 
 logger = logging.getLogger('balamod')
@@ -345,61 +343,6 @@ local function validateManifest(modFolder, manifest)
     return true
 end
 
-local function loadMod(modFolder)
-    local mod = {}
-    logger:debug('Trying to load mod from: ', modFolder)
-    if not love.filesystem.getInfo('mods/' .. modFolder, 'directory') then
-        logger:error('Mod folder ', modFolder, ' does not exist')
-        return nil
-    end
-    if not love.filesystem.getInfo('mods/' .. modFolder .. '/main.lua', 'file') then
-        logger:error('Mod folder ', modFolder, ' does not contain a main.lua file')
-        return nil
-    end
-    if not love.filesystem.getInfo('mods/' .. modFolder .. '/manifest.json', 'file') then
-        logger:error('Mod folder ', modFolder, ' does not contain a manifest.json file')
-        return nil
-    end
-    logger:debug("Loading manifest from: ", 'mods/'..modFolder..'/manifest.json')
-    -- load the manifest
-    local manifest = json.decode(love.filesystem.read('mods/'..modFolder..'/manifest.json'))
-    if not validateManifest(modFolder, manifest) then
-        return nil
-    end
-    logger:debug('Manifest loaded: ', manifest)
-    -- check that the mod is compatible with the current version of balamod
-    if manifest.min_balamod_version then
-        local minVersion = utils.parseVersion(manifest.min_balamod_version)
-        if not utils.v2GreaterThanV1(minVersion, _VERSION) then
-            logger:error('Mod ', modFolder, ' requires a newer version of balamod')
-            return nil
-        end
-    end
-    if manifest.max_balamod_version then
-        local maxVersion = utils.parseVersion(manifest.max_balamod_version)
-        if utils.v2GreaterThanV1(maxVersion, _VERSION) then
-            logger:error('Mod ', modFolder, ' requires an older version of balamod')
-            return nil
-        end
-    end
-    -- load the hooks (on_enable, on_game_load, etc...)
-    logger:debug("Loading hooks from: ", 'mods/'..modFolder..'/main.lua')
-    local modHooks = require('mods/'..modFolder..'/main')
-    for hookName, hook in pairs(modHooks) do
-        mod[hookName] = hook
-    end
-    for key, value in pairs(manifest) do
-        mod[key] = value
-    end
-    mod.enabled = true
-    logger:debug('Mod loaded: ', mod.id)
-    logger:debug("Checking if mod is disabled")
-    if love.filesystem.getInfo('mods/' .. modFolder .. '/disable.it', 'file') then
-        mod.enabled = false
-    end
-    logger:debug('Mod enabled: ', mod.enabled)
-    return mod
-end
 
 local function toggleMod(mod)
     logger:debug('Toggling mod: ' .. mod.id)
@@ -507,365 +450,365 @@ mods["dev_console"] = {
 
         console.logger:debug("Registering commands")
         console:registerCommand(
-                "help",
-                function()
-                    console.logger:print("Available commands:")
-                    for name, cmd in pairs(console.commands) do
-                        if cmd.desc then
-                            console.logger:print(name .. ": " .. cmd.desc)
-                        end
+            "help",
+            function()
+                console.logger:print("Available commands:")
+                for name, cmd in pairs(console.commands) do
+                    if cmd.desc then
+                        console.logger:print(name .. ": " .. cmd.desc)
                     end
-                    return true
-                end,
-                "Prints a list of available commands",
-                function(current_arg)
-                    local completions = {}
-                    for name, _ in pairs(console.commands) do
-                        if name:find(current_arg, 1, true) == 1 then
-                            table.insert(completions, name)
-                        end
+                end
+                return true
+            end,
+            "Prints a list of available commands",
+            function(current_arg)
+                local completions = {}
+                for name, _ in pairs(console.commands) do
+                    if name:find(current_arg, 1, true) == 1 then
+                        table.insert(completions, name)
                     end
-                    return completions
-                end,
-                "Usage: help <command>"
+                end
+                return completions
+            end,
+            "Usage: help <command>"
         )
 
         console:registerCommand(
-                "shortcuts",
-                function()
-                    console.logger:print("Available shortcuts:")
-                    console.logger:print("F2: Open/Close the console")
-                    console.logger:print("F4: Toggle debug mode")
-                    if platform.is_mac then
-                        console.logger:print("Cmd+C: Copy the current command to the clipboard.")
-                        console.logger:print("Cmd+Shift+C: Copies all messages to the clipboard")
-                        console.logger:print("Cmd+V: Paste the clipboard into the current command")
-                    else
-                        console.logger:print("Ctrl+C: Copy the current command to the clipboard.")
-                        console.logger:print("Ctrl+Shift+C: Copies all messages to the clipboard")
-                        console.logger:print("Ctrl+V: Paste the clipboard into the current command")
-                    end
-                    return true
-                end,
-                "Prints a list of available shortcuts",
-                function(current_arg)
-                    return nil
-                end,
-                "Usage: shortcuts"
+            "shortcuts",
+            function()
+                console.logger:print("Available shortcuts:")
+                console.logger:print("F2: Open/Close the console")
+                console.logger:print("F4: Toggle debug mode")
+                if platform.is_mac then
+                    console.logger:print("Cmd+C: Copy the current command to the clipboard.")
+                    console.logger:print("Cmd+Shift+C: Copies all messages to the clipboard")
+                    console.logger:print("Cmd+V: Paste the clipboard into the current command")
+                else
+                    console.logger:print("Ctrl+C: Copy the current command to the clipboard.")
+                    console.logger:print("Ctrl+Shift+C: Copies all messages to the clipboard")
+                    console.logger:print("Ctrl+V: Paste the clipboard into the current command")
+                end
+                return true
+            end,
+            "Prints a list of available shortcuts",
+            function(current_arg)
+                return nil
+            end,
+            "Usage: shortcuts"
         )
 
         console:registerCommand(
-                "history",
-                function()
-                    console.logger:print("Command history:")
-                    for i, cmd in ipairs(console.command_history) do
-                        console.logger:print(i .. ": " .. cmd)
-                    end
-                    return true
-                end,
-                "Prints the command history"
+            "history",
+            function()
+                console.logger:print("Command history:")
+                for i, cmd in ipairs(console.command_history) do
+                    console.logger:print(i .. ": " .. cmd)
+                end
+                return true
+            end,
+            "Prints the command history"
         )
 
         console.logger:debug("Registering command: clear")
         console:registerCommand(
-                "clear",
-                function()
-                    logging.clearLogs()
-                    return true
-                end,
-                "Clear the console"
+            "clear",
+            function()
+                logging.clearLogs()
+                return true
+            end,
+            "Clear the console"
         )
 
         console:registerCommand(
-                "exit",
-                function()
-                    console:toggle()
-                    return true
-                end,
-                "Close the console"
+            "exit",
+            function()
+                console:toggle()
+                return true
+            end,
+            "Close the console"
         )
 
         console:registerCommand(
-                "give",
-                function(args)
-                    local id = args[1]
-                    local c1 = nil
-                    if string.sub(id, 1, 2) == "j_" then
-                        c1 = create_card(nil, G.jokers, nil, 1, true, false, id, nil)
-                    else
-                        c1 = create_card(nil, G.consumeables, nil, 1, true, false, id, nil)
-                    end
-                    G.E_MANAGER:add_event(Event({
-                        trigger = 'after',
-                        delay = 0.1,
-                        func = function()
-                            c1:add_to_deck()
-                            if string.sub(id, 1, 2) == "j_" then
-                                G.jokers:emplace(c1)
-                            else
-                                G.consumeables:emplace(c1)
-                            end
-
-                            G.CONTROLLER:save_cardarea_focus('jokers')
-                            G.CONTROLLER:recall_cardarea_focus('jokers')
-                            return true
-                        end
-                    }))
-                    return true
-                end,
-                "Give an item to the player",
-                function(current_arg)
-                    local ret = {}
-                    for k,_ in pairs(G.P_CENTERS) do
-                        if string.find(k, current_arg) == 1 then
-                            table.insert(ret, k)
-                        end
-                    end
-                    return ret
+            "give",
+            function(args)
+                local id = args[1]
+                local c1 = nil
+                if string.sub(id, 1, 2) == "j_" then
+                    c1 = create_card(nil, G.jokers, nil, 1, true, false, id, nil)
+                else
+                    c1 = create_card(nil, G.consumeables, nil, 1, true, false, id, nil)
                 end
+                G.E_MANAGER:add_event(Event({
+                    trigger = 'after',
+                    delay = 0.1,
+                    func = function()
+                        c1:add_to_deck()
+                        if string.sub(id, 1, 2) == "j_" then
+                            G.jokers:emplace(c1)
+                        else
+                            G.consumeables:emplace(c1)
+                        end
+                        
+                        G.CONTROLLER:save_cardarea_focus('jokers')
+                        G.CONTROLLER:recall_cardarea_focus('jokers')
+                        return true
+                    end
+                }))
+                return true
+            end,
+            "Give an item to the player",
+            function(current_arg)
+                local ret = {}
+                for k,_ in pairs(G.P_CENTERS) do
+                    if string.find(k, current_arg) == 1 then
+                        table.insert(ret, k)
+                    end
+                end
+                return ret
+            end
         )
 
         console:registerCommand(
-                "money",
-                function(args)
-                    if args[1] and args[2] then
-                        local amount = tonumber(args[2])
-                        if amount then
-                            if args[1] == "add" then
-                                ease_dollars(amount, true)
-                                console.logger:info("Added " .. amount .. " money to the player")
-                            elseif args[1] == "remove" then
-                                ease_dollars(-amount, true)
-                                console.logger:info("Removed " .. amount .. " money from the player")
-                            elseif args[1] == "set" then
-                                local currentMoney = G.GAME.dollars
-                                local diff = amount - currentMoney
-                                ease_dollars(diff, true)
-                                console.logger:info("Set player money to " .. amount)
-                            else
-                                console.logger:error("Invalid operation, use add, remove or set")
-                            end
+            "money",
+            function(args)
+                if args[1] and args[2] then
+                    local amount = tonumber(args[2])
+                    if amount then
+                        if args[1] == "add" then
+                            ease_dollars(amount, true)
+                            console.logger:info("Added " .. amount .. " money to the player")
+                        elseif args[1] == "remove" then
+                            ease_dollars(-amount, true)
+                            console.logger:info("Removed " .. amount .. " money from the player")
+                        elseif args[1] == "set" then
+                            local currentMoney = G.GAME.dollars
+                            local diff = amount - currentMoney
+                            ease_dollars(diff, true)
+                            console.logger:info("Set player money to " .. amount)
                         else
-                            console.logger:error("Invalid amount")
+                            console.logger:error("Invalid operation, use add, remove or set")
+                        end
+                    else
+                        console.logger:error("Invalid amount")
+                        return false
+                    end
+                else
+                    console.logger:warn("Usage: money <add/remove/set> <amount>")
+                    return false
+                end
+                return true
+            end,
+            "Change the player's money",
+            function (current_arg)
+                local subcommands = {"add", "remove", "set"}
+                for i, v in ipairs(subcommands) do
+                    if v:find(current_arg, 1, true) == 1 then
+                        return {v}
+                    end
+                end
+                return nil
+            end
+        )
+
+        console:registerCommand(
+            "discards",
+            function(args)
+                if args[1] and args[2] then
+                    local amount = tonumber(args[2])
+                    if amount then
+                        if args[1] == "add" then
+                            ease_discard(amount, true)
+                            console.logger:info("Added " .. amount .. " discards to the player")
+                        elseif args[1] == "remove" then
+                            ease_discard(-amount, true)
+                            console.logger:info("Removed " .. amount .. " discards from the player")
+                        elseif args[1] == "set" then
+                            local currentDiscards = G.GAME.current_round.discards_left
+                            local diff = amount - currentDiscards
+                            ease_discard(diff, true)
+                            console.logger:info("Set player discards to " .. amount)
+                        else
+                            console.logger:error("Invalid operation, use add, remove or set")
                             return false
                         end
                     else
-                        console.logger:warn("Usage: money <add/remove/set> <amount>")
+                        console.logger:error("Invalid amount")
                         return false
                     end
-                    return true
-                end,
-                "Change the player's money",
-                function (current_arg)
-                    local subcommands = {"add", "remove", "set"}
-                    for i, v in ipairs(subcommands) do
-                        if v:find(current_arg, 1, true) == 1 then
-                            return {v}
-                        end
-                    end
-                    return nil
+                else
+                    console.logger:warn("Usage: discards <add/remove/set> <amount>")
+                    return false
                 end
+                return true
+            end,
+            "Change the player's discards",
+            function (current_arg)
+                local subcommands = {"add", "remove", "set"}
+                for i, v in ipairs(subcommands) do
+                    if v:find(current_arg, 1, true) == 1 then
+                        return {v}
+                    end
+                end
+                return nil
+            end
         )
 
         console:registerCommand(
-                "discards",
-                function(args)
-                    if args[1] and args[2] then
-                        local amount = tonumber(args[2])
-                        if amount then
-                            if args[1] == "add" then
-                                ease_discard(amount, true)
-                                console.logger:info("Added " .. amount .. " discards to the player")
-                            elseif args[1] == "remove" then
-                                ease_discard(-amount, true)
-                                console.logger:info("Removed " .. amount .. " discards from the player")
-                            elseif args[1] == "set" then
-                                local currentDiscards = G.GAME.current_round.discards_left
-                                local diff = amount - currentDiscards
-                                ease_discard(diff, true)
-                                console.logger:info("Set player discards to " .. amount)
-                            else
-                                console.logger:error("Invalid operation, use add, remove or set")
+            "hands",
+            function(args)
+                if args[1] and args[2] then
+                    local amount = tonumber(args[2])
+                    if amount then
+                        if args[1] == "add" then
+                            ease_hands_played(amount, true)
+                            console.logger:info("Added " .. amount .. " hands to the player")
+                        elseif args[1] == "remove" then
+                            ease_hands_played(-amount, true)
+                            console.logger:info("Removed " .. amount .. " hands from the player")
+                        elseif args[1] == "set" then
+                            local currentHands = G.GAME.current_round.hands_left
+                            local diff = amount - currentHands
+                            ease_hands_played(diff, true)
+                            console.logger:info("Set player hands to " .. amount)
+                        else
+                            console.logger:error("Invalid operation, use add, remove or set")
+                            return false
+                        end
+                    else
+                        console.logger:error("Invalid amount")
+                        return false
+                    end
+                else
+                    console.logger:warn("Usage: hands <add/remove/set> <amount>")
+                    return false
+                end
+                return true
+            end,
+            "Change the player's remaining hands",
+            function (current_arg)
+                local subcommands = {"add", "remove", "set"}
+                for i, v in ipairs(subcommands) do
+                    if v:find(current_arg, 1, true) == 1 then
+                        return {v}
+                    end
+                end
+                return nil
+            end
+        )
+
+        console:registerCommand(
+            "luamod",
+            function(args)
+                if args[1] then
+                    local modId = args[1]
+                    if isModPresent(modId) then
+                        local mod = mods[modId]
+                        if mod.enabled and mod.on_disable and type(mod.on_disable) == "function" then
+                            local success, result = pcall(mod.on_disable)
+                            if not success then
+                                console.logger:error("Error disabling mod: " .. modId)
+                                console.logger:error(result)
                                 return false
                             end
-                        else
-                            console.logger:error("Invalid amount")
-                            return false
                         end
-                    else
-                        console.logger:warn("Usage: discards <add/remove/set> <amount>")
-                        return false
-                    end
-                    return true
-                end,
-                "Change the player's discards",
-                function (current_arg)
-                    local subcommands = {"add", "remove", "set"}
-                    for i, v in ipairs(subcommands) do
-                        if v:find(current_arg, 1, true) == 1 then
-                            return {v}
-                        end
-                    end
-                    return nil
-                end
-        )
-
-        console:registerCommand(
-                "hands",
-                function(args)
-                    if args[1] and args[2] then
-                        local amount = tonumber(args[2])
-                        if amount then
-                            if args[1] == "add" then
-                                ease_hands_played(amount, true)
-                                console.logger:info("Added " .. amount .. " hands to the player")
-                            elseif args[1] == "remove" then
-                                ease_hands_played(-amount, true)
-                                console.logger:info("Removed " .. amount .. " hands from the player")
-                            elseif args[1] == "set" then
-                                local currentHands = G.GAME.current_round.hands_left
-                                local diff = amount - currentHands
-                                ease_hands_played(diff, true)
-                                console.logger:info("Set player hands to " .. amount)
-                            else
-                                console.logger:error("Invalid operation, use add, remove or set")
-                                return false
-                            end
-                        else
-                            console.logger:error("Invalid amount")
-                            return false
-                        end
-                    else
-                        console.logger:warn("Usage: hands <add/remove/set> <amount>")
-                        return false
-                    end
-                    return true
-                end,
-                "Change the player's remaining hands",
-                function (current_arg)
-                    local subcommands = {"add", "remove", "set"}
-                    for i, v in ipairs(subcommands) do
-                        if v:find(current_arg, 1, true) == 1 then
-                            return {v}
-                        end
-                    end
-                    return nil
-                end
-        )
-
-        console:registerCommand(
-                "luamod",
-                function(args)
-                    if args[1] then
-                        local modId = args[1]
-                        if isModPresent(modId) then
-                            local mod = mods[modId]
-                            if mod.enabled and mod.on_disable and type(mod.on_disable) == "function" then
-                                local success, result = pcall(mod.on_disable)
-                                if not success then
-                                    console.logger:error("Error disabling mod: " .. modId)
-                                    console.logger:error(result)
+                        mod = loadMod(modId)
+                        mods[modId] = mod
+                        mods = sortMods(mods)
+                        -- no need to redo the whole shebang, just call on_enable
+                        -- this is because the dependencies are most likely already loaded
+                        if mod.enabled then
+                            if mod.on_enable and type(mod.on_enable) == 'function' then
+                                local status, message = pcall(mod.on_enable)
+                                if not status then
+                                    console.logger:error("Error enabling mod: " .. modId)
+                                    console.logger:error(message)
                                     return false
                                 end
                             end
-                            mod = loadMod(modId)
-                            mods[modId] = mod
-                            mods = sortMods(mods)
-                            -- no need to redo the whole shebang, just call on_enable
-                            -- this is because the dependencies are most likely already loaded
-                            if mod.enabled then
-                                if mod.on_enable and type(mod.on_enable) == 'function' then
-                                    local status, message = pcall(mod.on_enable)
-                                    if not status then
-                                        console.logger:error("Error enabling mod: " .. modId)
-                                        console.logger:error(message)
-                                        return false
-                                    end
-                                end
-                            end
-                            console.logger:info("Reloaded mod: " .. modId)
-                        else
-                            console.logger:error("Mod not found: " .. modId)
-                            return false
                         end
+                        console.logger:info("Reloaded mod: " .. modId)
                     else
-                        console.logger:error("Usage: luamod <mod_id>")
+                        console.logger:error("Mod not found: " .. modId)
                         return false
                     end
+                else
+                    console.logger:error("Usage: luamod <mod_id>")
+                    return false
+                end
+                return true
+            end,
+            "Reload a mod using its id",
+            function (current_arg)
+                local completions = {}
+                for modId, _ in pairs(mods) do
+                    if modId:find(current_arg, 1, true) == 1 then
+                        table.insert(completions, modId)
+                    end
+                end
+                return completions
+            end,
+            "Usage: luamod <mod_id>"
+        )
+
+        console:registerCommand(
+            "sandbox",
+            function (args)
+                G:sandbox()
+                return true
+            end,
+            "Goes to the sandbox stage",
+            function (current_arg)
+                return nil
+            end,
+            "Usage: sandbox"
+        )
+
+        console:registerCommand(
+            "luarun",
+            function (args)
+                local code = table.concat(args, " ")
+                local func, err = load(code)
+                if func then
+                    console.logger:info("Lua code executed successfully")
+                    console.logger:print(func())
                     return true
-                end,
-                "Reload a mod using its id",
-                function (current_arg)
-                    local completions = {}
-                    for modId, _ in pairs(mods) do
-                        if modId:find(current_arg, 1, true) == 1 then
-                            table.insert(completions, modId)
-                        end
-                    end
-                    return completions
-                end,
-                "Usage: luamod <mod_id>"
+                else
+                    console.logger:error("Error loading lua code: ", err)
+                    return false
+                end
+            end,
+            "Run lua code in the context of the game",
+            function (current_arg)
+                return nil
+            end,
+            "Usage: luarun <lua_code>"
         )
 
         console:registerCommand(
-                "sandbox",
-                function (args)
-                    G:sandbox()
+                -- TODO: change with balalib
+            "installmod",
+            function (args)
+                local url = args[1]
+                local modInfo = {
+                    id = "testmod",
+                    url = url,
+                    present = false,
+                    needUpdate = true,
+                }
+                local result = installModFromTar(modInfo)
+                if result == RESULT.SUCCESS then
+                    console.logger:info("Mod installed successfully")
                     return true
-                end,
-                "Goes to the sandbox stage",
-                function (current_arg)
-                    return nil
-                end,
-                "Usage: sandbox"
-        )
-
-        console:registerCommand(
-                "luarun",
-                function (args)
-                    local code = table.concat(args, " ")
-                    local func, err = load(code)
-                    if func then
-                        console.logger:info("Lua code executed successfully")
-                        console.logger:print(func())
-                        return true
-                    else
-                        console.logger:error("Error loading lua code: ", err)
-                        return false
-                    end
-                end,
-                "Run lua code in the context of the game",
-                function (current_arg)
-                    return nil
-                end,
-                "Usage: luarun <lua_code>"
-        )
-
-        console:registerCommand(
-        -- TODO: change with balalib
-                "installmod",
-                function (args)
-                    local url = args[1]
-                    local modInfo = {
-                        id = "testmod",
-                        url = url,
-                        present = false,
-                        needUpdate = true,
-                    }
-                    local result = installModFromTar(modInfo)
-                    if result == RESULT.SUCCESS then
-                        console.logger:info("Mod installed successfully")
-                        return true
-                    else
-                        console.logger:error("Error installing mod: ", result)
-                        return false
-                    end
-                end,
-                "Install a mod from a tarball",
-                function (current_arg)
-                    return nil
-                end,
-                "Usage: installmod <mod_url>"
+                else
+                    console.logger:error("Error installing mod: ", result)
+                    return false
+                end
+            end,
+            "Install a mod from a tarball",
+            function (current_arg)
+                return nil
+            end,
+            "Usage: installmod <mod_url>"
         )
 
         console.logger:debug("Dev Console on_enable completed")
@@ -1071,7 +1014,6 @@ return {
     is_loaded = is_loaded,
     _VERSION = _VERSION,
     console = console,
-    loadMod = loadMod,
     toggleMod = toggleMod,
     sortMods = sortMods,
     callModCallbacksIfExists = callModCallbacksIfExists,
