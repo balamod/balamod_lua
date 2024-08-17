@@ -51,10 +51,6 @@ if not status then
     logger:warn("Failed to preload mods: ", message)
 end
 
-inject = balamod.inject
-injectHead = balamod.injectHead
-injectTail = balamod.injectTail
-
 require('balamod_back')
 require('balamod_love')
 require('balamod_card')

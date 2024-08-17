@@ -7,6 +7,10 @@ local utils = require('utils')
 local https = require('https')
 
 logger = logging.getLogger('balamod')
+
+balalib.setup_injection()
+logger:info('Injection setup done')
+
 mods = {}
 local apis = {
     logging = logging,
@@ -75,130 +79,6 @@ local function request(url)
         code, response = request(headers.location)
     end
     return code, response
-end
-
-local function extractFunctionBody(path, function_name)
-    local pattern = "\n?%s*function%s+" .. function_name .. "%("
-    local func_begin, fin = current_game_code[path]:find(pattern)
-
-    if not func_begin then
-        return "Can't find function begin " .. function_name
-    end
-
-    local func_end = current_game_code[path]:find("\n\r?end", fin)
-
-    -- This is to catch functions that have incorrect ending indentation by catching the next function in line.
-    -- Can be removed once Card:calculate_joker no longer has this typo.
-    local typocatch_func_end = current_game_code[path]:find("\n\r?function", fin)
-    if typocatch_func_end and typocatch_func_end < func_end then
-        func_end = typocatch_func_end - 3
-    end
-
-    if not func_end then
-        return "Can't find function end " .. function_name
-    end
-
-    local func_body = current_game_code[path]:sub(func_begin, func_end + 3)
-    return func_body
-end
-
-local function inject(path, function_name, to_replace, replacement)
-    -- Injects code into a function (replaces a string with another string inside a function)
-    local function_body = extractFunctionBody(path, function_name)
-    local modified_function_code = function_body:gsub(to_replace, replacement)
-    escaped_function_body = function_body:gsub("([^%w])", "%%%1") -- escape function body for use in gsub
-    escaped_modified_function_code = modified_function_code:gsub("([^%w])", "%%%1")
-    current_game_code[path] = current_game_code[path]:gsub(escaped_function_body, escaped_modified_function_code) -- update current game code in memory
-
-    local new_function, load_error = load(modified_function_code) -- load modified function
-    if not new_function then
-        logger:error("Error loading modified function", function_name, ": ", (load_error or "Unknown error"))
-        logger:error(modified_function_code)
-    end
-
-    if setfenv then
-        setfenv(new_function, getfenv(original_testFunction))
-    end -- Set the environment of the new function to the same as the original function
-
-    local status, result = pcall(new_function) -- Execute the new function
-    if status then
-        testFunction = result -- Overwrite the original function with the result of the new function
-    else
-        logger:error("Error executing modified function", function_name, ": ", result) -- Safeguard against errors
-        logger:error(modified_function_code)
-    end
-end
-
-local function injectHead(path, function_name, code)
-    local function_body = extractFunctionBody(path, function_name)
-
-    local pattern = "(function%s+" .. function_name .. ".-)\n"
-    local modified_function_code, number_of_subs = function_body:gsub(pattern, "%1\n" .. code .. "\n")
-
-    if number_of_subs == 0 then
-        logger:error("Error: Function start not found in function body or multiple matches encountered.")
-        logger:error(modified_function_code)
-        return
-    end
-
-    escaped_function_body = function_body:gsub("([^%w])", "%%%1")
-    escaped_modified_function_code = modified_function_code:gsub("([^%w])", "%%%1")
-    current_game_code[path] = current_game_code[path]:gsub(escaped_function_body, escaped_modified_function_code)
-
-    local new_function, load_error = load(modified_function_code)
-    if not new_function then
-        logger:error("Error loading modified function ", function_name, " with head injection: ", (load_error or "Unknown error"))
-        logger:error(modified_function_code)
-        return
-    end
-
-    if setfenv then
-        setfenv(new_function, getfenv(original_testFunction))
-    end
-
-    local status, result = pcall(new_function)
-    if status then
-        testFunction = result
-    else
-        logger:error("Error executing modified function ", function_name, " with head injection: ", result)
-        logger:error(modified_function_code)
-    end
-end
-
-local function injectTail(path, function_name, code)
-    local function_body = extractFunctionBody(path, function_name)
-
-    local pattern = "(.-)(end[ \t]*\n?)$"
-    local modified_function_code, number_of_subs = function_body:gsub(pattern, "%1" .. string.gsub(code, '(.-)%s*$', '%1') .. "\n" .. "%2")
-
-    if number_of_subs == 0 then
-        logger:error("Error: 'end' not found in function '", function_name, "' body or multiple ends encountered.")
-        logger:error(modified_function_code)
-        return
-    end
-
-    escaped_function_body = function_body:gsub("([^%w])", "%%%1")
-    escaped_modified_function_code = modified_function_code:gsub("([^%w])", "%%%1")
-    current_game_code[path] = current_game_code[path]:gsub(escaped_function_body, escaped_modified_function_code)
-
-    local new_function, load_error = load(modified_function_code)
-    if not new_function then
-        logger:error("Error loading modified function ", function_name, " with tail injection: ", (load_error or "Unknown error"))
-        logger:error(modified_function_code)
-        return
-    end
-
-    if setfenv then
-        setfenv(new_function, getfenv(original_testFunction))
-    end
-
-    local status, result = pcall(new_function)
-    if status then
-        testFunction = result
-    else
-        logger:error("Error executing modified function ", function_name, " with tail injection: ", result)
-        logger:error(modified_function_code)
-    end
 end
 
 local function isModPresent(modId)
@@ -1022,9 +902,6 @@ return {
     apis = apis,
     isModPresent = isModPresent,
     RESULT = RESULT,
-    inject = inject,
-    injectHead = injectHead,
-    injectTail = injectTail,
     is_loaded = is_loaded,
     _VERSION = _VERSION,
     console = console,
