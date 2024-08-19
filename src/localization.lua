@@ -28,15 +28,28 @@ local function getModLocale(mod, locale)
         logger:trace("Locale file does not exist: ", pathToLocale)
         return getModLocale(mod, 'en-us')  -- try to fallback to the english locale
     end
-    --local modLocale = json.decode(love.filesystem.read(pathToLocale))
-    --logger:info("Loaded locale for mod ", mod.id, " and locale ", locale, ": ", modLocale)
-    -- TODO: implement in balalib
-    return nil
+    local json_locale = love.filesystem.read(pathToLocale)
+    print(json_locale)
+    local schema = love.filesystem.read("balamod/localization.schema.json")
+    print(schema)
+    if not schema then
+        logger:error("Localization schema does not exist")
+        return nil
+    end
+    local json_schema_result = balalib.validate_schema(schema, json_locale)
+    print(json_schema_result)
+    if json_locale ~= "valid" then
+        logger:error("Invalid locale for mod ", mod.id, " and locale ", locale, ": ", json_schema_result)
+        return nil
+    end
+    local modLocale = balalib.json_to_lua(json_locale)
+    logger:info("Loaded locale for mod ", mod.id, " and locale ", locale, ": ", modLocale)
+    return modLocale
 end
 
 local function inject()
     local localizations = {}
-    for modId, mod in pairs(balamod.mods) do
+    for _, mod in pairs(balamod.mods) do
         local modLocale = getModLocale(mod, G.SETTINGS.language)
         if modLocale then
             logger:debug("Injecting locale for mod ", mod.id, ": ", modLocale)

@@ -1,0 +1,422 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "$defs": {
+    "text_union": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/text"
+        },
+        {
+          "$ref": "#/$defs/multiline_text"
+        }
+      ]
+    },
+    "text": {
+      "type": "string",
+      "maxLength": 60
+    },
+    "multiline_text": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/text"
+      }
+    },
+    "game_object": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "text": {
+          "$ref": "#/$defs/multiline_text"
+        }
+      },
+      "required": [
+        "name",
+        "text"
+      ],
+      "additionalProperties": false
+    },
+    "unlockable_game_object": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "text": {
+          "$ref": "#/$defs/multiline_text"
+        },
+        "unlock": {
+          "$ref": "#/$defs/multiline_text"
+        }
+      },
+      "required": [
+        "name",
+        "text"
+      ],
+      "additionalProperties": false
+    },
+    "jokers": {
+      "type": "object",
+      "patternProperties": {
+        "^j_[a-z_]+$": {
+          "$ref": "#/$defs/unlockable_game_object"
+        }
+      }
+    },
+    "vouchers": {
+      "type": "object",
+      "patternProperties": {
+        "^v_[a-z_]+$": {
+          "$ref": "#/$defs/unlockable_game_object"
+        }
+      }
+    },
+    "consumables": {
+      "type": "object",
+      "patternProperties": {
+        "^c_[a-z_]+$": {
+          "$ref": "#/$defs/game_object"
+        }
+      }
+    },
+    "editions": {
+      "type": "object",
+      "patternProperties": {
+        "^e_[a-z_]+$": {
+          "$ref": "#/$defs/game_object"
+        }
+      }
+    },
+    "enhancements": {
+      "type": "object",
+      "patternProperties": {
+        "^m_[a-z_]+$": {
+          "$ref": "#/$defs/game_object"
+        }
+      }
+    },
+    "stakes": {
+      "type": "object",
+      "patternProperties": {
+        "^stake_[a-z_]+$": {
+          "$ref": "#/$defs/game_object"
+        }
+      }
+    },
+    "tags": {
+      "type": "object",
+      "patternProperties": {
+        "^tag_[a-z_]+$": {
+          "$ref": "#/$defs/game_object"
+        }
+      }
+    },
+    "blinds": {
+      "type": "object",
+      "patternProperties": {
+        "^bl_[a-z_]+$": {
+          "$ref": "#/$defs/game_object"
+        }
+      }
+    },
+    "backs": {
+      "type": "object",
+      "patternProperties": {
+        "^b_[a-z_]+$": {
+          "$ref": "#/$defs/game_object"
+        }
+      }
+    },
+    "others": {
+      "type": "object",
+      "patternProperties": {
+        "[a-z_]+$": {
+          "$ref": "#/$defs/game_object"
+        }
+      }
+    },
+    "suits": {
+      "type": "object",
+      "properties": {
+        "Spades": {
+          "type": "string"
+        },
+        "Hearts": {
+          "type": "string"
+        },
+        "Diamonds": {
+          "type": "string"
+        },
+        "Clubs": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "descriptions": {
+      "type": "object",
+      "properties": {
+        "Joker": {
+          "$ref": "#/$defs/jokers"
+        },
+        "Voucher": {
+          "$ref": "#/$defs/vouchers"
+        },
+        "Tarot": {
+          "$ref": "#/$defs/consumables"
+        },
+        "Planet": {
+          "$ref": "#/$defs/consumables"
+        },
+        "Spectral": {
+          "$ref": "#/$defs/consumables"
+        },
+        "Edition": {
+          "$ref": "#/$defs/editions"
+        },
+        "Enhanced": {
+          "$ref": "#/$defs/enhancements"
+        },
+        "Stake": {
+          "$ref": "#/$defs/stakes"
+        },
+        "Tag": {
+          "$ref": "#/$defs/tags"
+        },
+        "Blind": {
+          "$ref": "#/$defs/blinds"
+        },
+        "Back": {
+          "$ref": "#/$defs/backs"
+        },
+        "Other": {
+          "$ref": "#/$defs/others"
+        }
+      }
+    },
+    "UI": {
+      "type": "object",
+      "additionalProperties": false
+    },
+    "tutorial": {
+      "type": "object",
+      "additionalProperties": false
+    },
+    "misc": {
+      "type": "object",
+      "properties": {
+        "suits_singular": {
+          "$ref": "#/$defs/suits"
+        },
+        "suits_plural": {
+          "$ref": "#/$defs/suits"
+        },
+        "blind_states": {
+          "type": "object",
+          "properties": {
+            "Select": {
+              "type": "string"
+            },
+            "Skipped": {
+              "type": "string"
+            },
+            "Current": {
+              "type": "string"
+            },
+            "Defeated": {
+              "type": "string"
+            },
+            "Upcoming": {
+              "type": "string"
+            },
+            "Selected": {
+              "type": "string"
+            }
+          }
+        },
+        "ranks": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "2": {
+              "type": "string"
+            },
+            "3": {
+              "type": "string"
+            },
+            "4": {
+              "type": "string"
+            },
+            "5": {
+              "type": "string"
+            },
+            "6": {
+              "type": "string"
+            },
+            "7": {
+              "type": "string"
+            },
+            "8": {
+              "type": "string"
+            },
+            "9": {
+              "type": "string"
+            },
+            "10": {
+              "type": "string"
+            },
+            "Jack": {
+              "type": "string"
+            },
+            "Queen": {
+              "type": "string"
+            },
+            "King": {
+              "type": "string"
+            },
+            "Ace": {
+              "type": "string"
+            }
+          }
+        },
+        "high_scores": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "hand": {
+              "type": "string"
+            },
+            "furthest_round": {
+              "type": "string"
+            },
+            "furthest_ante": {
+              "type": "string"
+            },
+            "most_money": {
+              "type": "string"
+            },
+            "boss_streak": {
+              "type": "string"
+            },
+            "collection": {
+              "type": "string"
+            },
+            "win_streak": {
+              "type": "string"
+            },
+            "current_streak": {
+              "type": "string"
+            },
+            "poker_hand": {
+              "type": "string"
+            }
+          }
+        },
+        "achievement_names": {
+          "type": "object",
+          "propertyPattern": {
+            "^[a-z_]+$": {
+              "type": "string"
+            }
+          }
+        },
+        "achievement_descriptions": {
+          "type": "object",
+          "propertyPattern": {
+            "^[a-z_]+$": {
+              "type": "string"
+            }
+          }
+        },
+        "challenge_names": {
+          "type": "object",
+          "propertyPattern": {
+            "^c_[a-z_0-9]+$": {
+              "type": "string"
+            }
+          }
+        },
+        "poker_hands": {
+          "type": "object",
+          "propertyPattern": {
+            "^.+$": {
+              "type": "string"
+            }
+          }
+        },
+        "poker_hand_descriptions": {
+          "type": "object",
+          "propertyPattern": {
+            "^.+$": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 50
+              }
+            }
+          }
+        },
+        "labels": {
+          "type": "object",
+          "propertyPattern": {
+            "^[a-z_]+$": {
+              "type": "string"
+            }
+          }
+        },
+        "dictionary": {
+          "type": "object",
+          "propertyPattern": {
+            "^.+$": {
+              "$ref": "#/$defs/text_union"
+            }
+          }
+        },
+        "v_dictionary": {
+          "type": "object",
+          "propertyPattern": {
+            "^.+$": {
+              "$ref": "#/$defs/text_union"
+            }
+          }
+        },
+        "v_text": {
+          "type": "object",
+          "propertyPattern": {
+            "^.+$": {
+              "$ref": "#/$defs/multiline_text"
+            }
+          }
+        },
+        "quips": {
+          "type": "object",
+          "propertyPattern": {
+            "^[wld]q_[0-9]+$": {
+              "$ref": "#/$defs/multiline_text"
+            }
+          }
+        },
+        "tutorial": {
+          "type": "object",
+          "propertyPattern": {
+            "^[a-z0-9_]+$": {
+              "$ref": "#/$defs/multiline_text"
+            }
+          }
+        }
+      }
+    },
+    "mods": {
+      "type": "object",
+      "propertyPattern": {
+        "^[a-z0-9_\\-]+$": {
+          "type": "object"
+        }
+      }
+    }
+  }
+}
