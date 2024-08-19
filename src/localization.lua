@@ -29,15 +29,12 @@ local function getModLocale(mod, locale)
         return getModLocale(mod, 'en-us')  -- try to fallback to the english locale
     end
     local json_locale = love.filesystem.read(pathToLocale)
-    print(json_locale)
     local schema = love.filesystem.read("balamod/localization.schema.json")
-    print(schema)
     if not schema then
         logger:error("Localization schema does not exist")
         return nil
     end
     local json_schema_result = balalib.validate_schema(schema, json_locale)
-    print(json_schema_result)
     if json_locale ~= "valid" then
         logger:error("Invalid locale for mod ", mod.id, " and locale ", locale, ": ", json_schema_result)
         return nil
