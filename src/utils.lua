@@ -198,6 +198,7 @@ local function copyTable(t, deep)
     end
 end
 
+-- TODO: Move this to balalib for performance reasons
 -- Merges two key-value tables, overwriting the values of the first table with the values of the second table
 -- @param table1 table
 -- @param table2 table
