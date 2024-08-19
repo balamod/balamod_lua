@@ -411,5 +411,12 @@ G.FUNCS.show_mods = function(e)
     G.FUNCS.overlay_menu({definition = G.UIDEF.mods()})
 end
 
+G.FUNCS.update_balamod = function(e)
+    local logging = require('logging')
+    local logger = logging.getLogger('updater')
+    logger:info('Updating balamod')
+    balalib.self_update()
+end
+
 balamod.logger:info('Mod menu loaded for balamod version', balamod._VERSION)
 G.VERSION = G.VERSION .. '\nBalamod ' .. balamod._VERSION

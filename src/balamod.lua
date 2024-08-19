@@ -11,6 +11,9 @@ logger = logging.getLogger('balamod')
 balalib.setup_injection()
 logger:info('Injection setup done')
 
+need_update = balalib.need_update()
+logger:info('Need update: ', need_update)
+
 mods = {}
 local apis = {
     logging = logging,
