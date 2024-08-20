@@ -11,7 +11,16 @@ logger = logging.getLogger('balamod')
 balalib.setup_injection()
 logger:info('Injection setup done')
 
-need_update = balalib.need_update()
+--need_update = balalib.need_update()
+need_update = false
+local status, message = pcall(balalib.need_update)
+if not status then
+    logger:error('Error while checking for updates: ', message)
+    need_update = false
+else
+    need_update = message
+end
+
 logger:info('Need update: ', need_update)
 
 mods = {}
@@ -299,6 +308,8 @@ end
 mods["dev_console"] = {
     id = "dev_console",
     name = "Dev Console",
+    load_before = {},
+    load_after = {},
     version = "0.6.0",
     author = "sbordeyne & UwUDev",
     description = {
