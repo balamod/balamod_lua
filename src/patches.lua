@@ -38,7 +38,8 @@ for _, mod in ipairs(balalib.get_local_mods()) do
         logger:info("Loaded mod: ", mod.id)
     end
 end
-local status, sortedMods = pcall(balamod.sortMods, balamod.mods)
+
+local status, sortedMods = pcall(balalib.sort_mods, balamod.mods)
 if not status then
     logger:warn("Failed to sort mods: ", sortedMods)
 else

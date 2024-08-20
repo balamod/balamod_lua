@@ -617,7 +617,13 @@ mods["dev_console"] = {
                             end
                             mod = loadMod(modId)
                             mods[modId] = mod
-                            mods = sortMods(mods)
+
+                            local sort_status, sortedMods = pcall(balalib.sort_mods, mods)
+                            if not sort_status then
+                                logger:warn("Failed to sort mods: ", sortedMods)
+                            else
+                                mods = sortedMods
+                            end
                             -- no need to redo the whole shebang, just call on_enable
                             -- this is because the dependencies are most likely already loaded
                             if mod.enabled then
@@ -831,85 +837,6 @@ mods["dev_console"] = {
     end,
 }
 
-
--- Topological sort of mods based on load_before and load_after fields
--- 1. Create a directed graph with the mods as nodes and the load_before and load_after fields as edges
--- 2. Run a topological sort on the graph
--- 3. Return the sorted list of mods
-local function sortMods(mods)
-    logger:trace('Sorting mods', utils.keys(mods))
-    local graph = {}
-    for modId, mod in pairs(mods) do
-        graph[modId] = {
-            before = {},
-        }
-    end
-    logger:trace('Graph generated', graph)
-    for modId, mod in pairs(mods) do
-        for i, before in ipairs(mod.load_before or {}) do -- load_before is a list of mod ids, if its nil, use an empty table to avoid a crash
-            if not graph[before] then
-                logger:error('Mod ', mod.id, ' has a load_before field that references a non-existent mod: ', before)
-                return nil
-            end
-            graph[modId].before[before] = true  -- we set to true just because we want a table behaving like a set() instead of an array
-        end
-        for i, after in ipairs(mod.load_after or {}) do -- load_after is a list of mod ids
-            -- load_after is there to ensure that a mod is loaded after another mod
-            -- this is equivalent to the other mod being loaded before the current mod
-            -- so we add an edge from the other mod to the current mod
-            if not graph[after] then
-                logger:error('Mod ', mod.id, ' has a load_after field that references a non-existent mod: ', after)
-                return nil
-            end
-            graph[after].before[modId] = true  -- we set to true just because we want a table behaving like a set() instead of an array
-        end
-    end
-    logger:trace('Graph nodes and edges', graph)
-    local sorted = {}
-    local visited = {}
-    local function visit(node)
-        logger:trace("Visiting node ", node)
-        if visited[node] == "permanent" then
-            logger:trace("Node ", node, " already visited")
-            return true
-        end
-        if visited[node] == "temporary" then
-            logger:error('Mod ', node, ' has a circular dependency')
-            return false
-        end
-        visited[node] = "temporary"
-        for other, _ in pairs(graph[node].before) do
-            if not visit(other) then
-                return false
-            end
-        end
-        table.insert(sorted, node)
-        logger:trace("Inserted node ", node, " in sorted list", sorted)
-        logger:trace("Marking node ", node, " as visited")
-        visited[node] = "permanent"
-        return true
-    end
-    logger:trace("Starting to visit nodes")
-    for node, _ in pairs(graph) do
-        if not visited[node] then
-            visit(node)
-        end
-    end
-    local sortedMods = {}
-    local modCount = #sorted
-    -- we need to keep the mapping between the mod id and the mod object
-    -- to do so, mod order will be guaranteed through an order(int) field on the mod object
-    for i, modId in ipairs(sorted) do
-        -- sorted is actually sorted in reverse order
-        -- to make the mod ordering work we need to reverse the order
-        local mod = mods[modId]
-        mod.order = modCount - i
-        sortedMods[modId] = mod
-    end
-    logger:trace("Built sorted mods", utils.keys(sortedMods))
-    return sortedMods
-end
-
 return {
     logger = logger,
     mods = mods,
@@ -920,6 +847,5 @@ return {
     _VERSION = _VERSION,
     console = console,
     toggleMod = toggleMod,
-    sortMods = sortMods,
     callModCallbacksIfExists = callModCallbacksIfExists,
 }
