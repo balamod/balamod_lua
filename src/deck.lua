@@ -24,7 +24,7 @@ end
 
 local function computeDeckOrders()
     local latestOrder = utils.reduce(
-        GAME_BACKS
+        GAME_BACKS,
         function(acc, deck)
             return math.max(acc, deck.order or 1)
         end,
