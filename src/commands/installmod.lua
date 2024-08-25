@@ -10,12 +10,12 @@ return {
             console.logger:error("No URL provided")
             return false
         end
-        local modId = balalib.install_mod_from_url(url)
-        if modId then
-            console.logger:info("Mod ", result, "installed successfully")
+        local result = balalib.install_mod_from_url(url)
+        if result.mod_id then
+            console.logger:info("Mod ", result.mod_id, "installed successfully")
             return true
         else
-            console.logger:error("Error installing mod: ", result)
+            console.logger:error("Error installing mod: ", result.error)
             return false
         end
     end,
