@@ -20,8 +20,21 @@ local logging = require('logging')
 local utils = require('utils')
 local logger = logging.getLogger('love')
 local localization = require('localization')
+local console = require('console')
+
 
 function love.load(args)
+    -- Dev Console
+    console.logger:info("Game loaded", args)
+    for _, arg in ipairs(args) do
+        local split = splitstring(arg, "=")
+        if split[0] == "--log-level" then
+            console.logger.level = split[1]:upper()
+            console.log_level = split[1]:upper()
+        end
+    end
+    logging.saveLogs()
+
     local status, message = pcall(balamod.callModCallbacksIfExists, balamod.mods, "on_game_load", true, args)
     if not status then
         logger:warn("Failed on_game_load for mods: ", message)
@@ -32,6 +45,8 @@ function love.load(args)
 end
 
 function love.quit()
+    console.logger:info("Quitting Balatro...")
+    logging.saveLogs()
     local status, message = pcall(balamod.callModCallbacksIfExists, balamod.mods, "on_game_quit", true)
     if not status then
         logger:warn("Failed on_game_quit for mods: ", message)
@@ -61,6 +76,8 @@ function love.update(dt)
 
     if balamod.is_loaded == false then
         balamod.is_loaded = true
+        console:initialize()
+        console.registerCommands()
         local status, message = pcall(balamod.callModCallbacksIfExists, balamod.mods, "on_enable", true)
         if not status then
             logger:warn("Failed to load mods: ", message)
@@ -92,13 +109,14 @@ end
 
 function love.keypressed(key)
     local cancel_event = false
+    cancel_event = console:handleKeyPressed(key)
     local status, result = pcall(balamod.callModCallbacksIfExists, balamod.mods, "on_key_pressed", false, key)
     if not status then
         logger:warn("Failed on_key_pressed for mods: ", result)
     else
         cancel_event = utils.reduce(result, function(acc, val)
             return acc or val.result
-        end, false)
+        end, cancel_event)
     end
 
     if cancel_event then
@@ -112,13 +130,14 @@ end
 
 function love.keyreleased(key)
     local cancel_event = false
+    cancel_event = console:handleKeyReleased(key)
     local status, result = pcall(balamod.callModCallbacksIfExists, balamod.mods, "on_key_released", false, key)
     if not status then
         logger:warn("Failed on_key_released for mods: ", result)
     else
         cancel_event = utils.reduce(result, function(acc, val)
             return acc or val.result
-        end, false)
+        end, cancel_event)
     end
 
     if cancel_event then
@@ -170,6 +189,7 @@ end
 
 function love.mousepressed(x, y, button, touch)
     local cancel_event = false
+    cancel_event = console.is_open
     local status, result = pcall(balamod.callModCallbacksIfExists, balamod.mods, "on_mouse_pressed", false, x, y, button, touch)
     if not status then
         logger:warn("Failed on_mouse_pressed for mods: ", result)
@@ -188,7 +208,7 @@ function love.mousepressed(x, y, button, touch)
 end
 
 function love.mousereleased(x, y, button)
-    local cancel_event = false
+    local cancel_event = console.is_open
     local status, result = pcall(balamod.callModCallbacksIfExists, balamod.mods, "on_mouse_released", false, x, y, button)
     if not status then
         logger:warn("Failed on_mouse_released for mods: ", result)

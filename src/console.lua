@@ -2,6 +2,7 @@ local logging = require("logging")
 local platform = require("platform")
 local utf8 = require("utf8")
 local math = require("math")
+local balalib = require("balalib")
 
 local logger = logging.getLogger("console")
 
@@ -26,6 +27,165 @@ return {
         meta = false,
     },
     commands = {},
+    initialize = function(self)
+        self.logger:debug("Initializing console")
+        contents, size = love.filesystem.read(self.history_path)
+        if contents then
+            self.logger:trace("History file size", size)
+            for line in contents:gmatch("[^\r\n]+") do
+                if line and line ~= "" then
+                    table.insert(self.command_history, line)
+                end
+            end
+        end
+    end,
+    registerCommands = function(self)
+        local clearCmd = require("commands.clear")
+        self:registerCommand(clearCmd.name, clearCmd.on_call, clearCmd.short_description, clearCmd.on_complete, clearCmd.usage)
+        local exitCmd = require("commands.exit")
+        self:registerCommand(exitCmd.name, exitCmd.on_call, exitCmd.short_description, exitCmd.on_complete, exitCmd.usage)
+        local giveCmd = require("commands.give")
+        self:registerCommand(giveCmd.name, giveCmd.on_call, giveCmd.short_description, giveCmd.on_complete, giveCmd.usage)
+        local helpCmd = require("commands.help")
+        self:registerCommand(helpCmd.name, helpCmd.on_call, helpCmd.short_description, helpCmd.on_complete, helpCmd.usage)
+        local historyCmd = require("commands.history")
+        self:registerCommand(historyCmd.name, historyCmd.on_call, historyCmd.short_description, historyCmd.on_complete, historyCmd.usage)
+        local moneyCmd = require("commands.money")
+        self:registerCommand(moneyCmd.name, moneyCmd.on_call, moneyCmd.short_description, moneyCmd.on_complete, moneyCmd.usage)
+        local shortcutsCmd = require("commands.shortcuts")
+        self:registerCommand(shortcutsCmd.name, shortcutsCmd.on_call, shortcutsCmd.short_description, shortcutsCmd.on_complete, shortcutsCmd.usage)
+        local discardsCmd = require("commands.discards")
+        self:registerCommand(discardsCmd.name, discardsCmd.on_call, discardsCmd.short_description, discardsCmd.on_complete, discardsCmd.usage)
+        local luarunCmd = require("commands.luarun")
+        self:registerCommand(luarunCmd.name, luarunCmd.on_call, luarunCmd.short_description, luarunCmd.on_complete, luarunCmd.usage)
+        local luamodCmd = require("commands.luamod")
+        self:registerCommand(luamodCmd.name, luamodCmd.on_call, luamodCmd.short_description, luamodCmd.on_complete, luamodCmd.usage)
+        local installmodCmd = require("commands.installmod")
+        self:registerCommand(installmodCmd.name, installmodCmd.on_call, installmodCmd.short_description, installmodCmd.on_complete, installmodCmd.usage)
+        local handsCmd = require("commands.hands")
+        self:registerCommand(handsCmd.name, handsCmd.on_call, handsCmd.short_description, handsCmd.on_complete, handsCmd.usage)
+        local sandboxCmd = require("commands.sandbox")
+        self:registerCommand(sandboxCmd.name, sandboxCmd.on_call, sandboxCmd.short_description, sandboxCmd.on_complete, sandboxCmd.usage)
+        -- Register mod specific commands
+        for _, mod in ipairs(balamod.mods) do
+            if mod.enabled then
+                self:registerCommandsForMod(mod)
+            end
+        end
+    end,
+    handleKeyPressed = function(self, key_name)
+        if key_name == "f2" then
+            self:toggle()
+            return true
+        end
+        if key_name == "f1" then
+            balalib.restart()
+            return true
+        end
+        if self.is_open then
+            self:typeKey(key_name)
+            return true
+        end
+
+        if key_name == "f4" then
+            G.DEBUG = not G.DEBUG
+            if G.DEBUG then
+                self.logger:info("Debug mode enabled")
+            else
+                self.logger:info("Debug mode disabled")
+            end
+        end
+        return false
+    end,
+    handleKeyReleased = function(self, key_name)
+        if key_name == "capslock" then
+            self.modifiers.capslock = not self.modifiers.capslock
+            self:modifiersListener()
+            return
+        end
+        if key_name == "scrolllock" then
+            self.modifiers.scrolllock = not self.modifiers.scrolllock
+            self:modifiersListener()
+            return
+        end
+        if key_name == "numlock" then
+            self.modifiers.numlock = not self.modifiers.numlock
+            self:modifiersListener()
+            return
+        end
+        if key_name == "lalt" or key_name == "ralt" then
+            self.modifiers.alt = false
+            self:modifiersListener()
+            return false
+        end
+        if key_name == "lctrl" or key_name == "rctrl" then
+            self.modifiers.ctrl = false
+            self:modifiersListener()
+            return false
+        end
+        if key_name == "lshift" or key_name == "rshift" then
+            self.modifiers.shift = false
+            self:modifiersListener()
+            return false
+        end
+        if key_name == "lgui" or key_name == "rgui" then
+            self.modifiers.meta = false
+            self:modifiersListener()
+            return false
+        end
+        return false
+    end,
+    draw = function(self)
+        self.max_lines = math.floor(love.graphics.getHeight() / self.line_height) - 5  -- 5 lines of bottom padding
+        local font = love.graphics.getFont()
+        if self.is_open then
+            love.graphics.setColor(0, 0, 0, 0.3)
+            love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
+            local messagesToDisplay = self:getMessagesToDisplay()
+            local i = 1
+            for _, message in ipairs(messagesToDisplay) do
+                r, g, b = self:getMessageColor(message)
+                love.graphics.setColor(r, g, b, 1)
+                local formattedMessage = message:formatted()
+                if font:getWidth(formattedMessage) > love.graphics.getWidth() then
+                    local lines = self:wrapText(formattedMessage, love.graphics.getWidth())
+                    for _, line in ipairs(lines) do
+                        love.graphics.print(line, 10, 10 + i * 20)
+                        i = i + 1
+                    end
+                else
+                    love.graphics.print(formattedMessage, 10, 10 + i * 20)
+                    i = i + 1
+                end
+            end
+            love.graphics.setColor(1, 1, 1, 1) -- white
+            love.graphics.print(self.cmd, 10, love.graphics.getHeight() - 30)
+        end
+    end,
+    registerCommandsForMod = function(self, mod)
+        if mod.commands then
+            for _, command in ipairs(mod.commands) do
+                local cmd = require(mod.id .. command.lua_path)
+                if cmd.on_call == nil then
+                    self.logger:error("Command ", command.name, " is missing on_call function")
+                end
+                self:registerCommand(
+                    command.name,
+                    cmd.on_call,
+                    command.short_description,
+                    cmd.on_complete,
+                    command.usage
+                )
+            end
+        end
+    end,
+    removeCommandsForMod = function(self, mod)
+        if mod.commands then
+            for _, command in ipairs(mod.commands) do
+                self:removeCommand(command.name)
+            end
+        end
+    end,
     toggle = function(self)
         self.is_open = not self.is_open
         love.keyboard.setKeyRepeat(self.is_open)  -- set key repeat to true when console is open
@@ -35,8 +195,18 @@ return {
             love.textinput = function(character)
                 self.cmd = self.cmd .. character
             end
+            if platform.is_android then
+                love.keyboard.setTextInput(
+                    true, 0,
+                    love.graphics.getHeight() - 30,
+                    love.graphics.getWidth(), 30
+                )
+            end
         else
             love.textinput = nil
+            if platform.is_android then
+                love.keyboard.setTextInput(false)
+            end
         end
     end,
     longestCommonPrefix = function(self, strings)
