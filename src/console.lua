@@ -67,9 +67,11 @@ return {
         local sandboxCmd = require("commands.sandbox")
         self:registerCommand(sandboxCmd.name, sandboxCmd.on_call, sandboxCmd.short_description, sandboxCmd.on_complete, sandboxCmd.usage)
         -- Register mod specific commands
-        for _, mod in ipairs(balamod.mods) do
-            if mod.enabled then
-                self:registerCommandsForMod(mod)
+        if mods ~= nil and type(mods) == 'table' then
+            for _, mod in ipairs(mods) do
+                if mod.enabled then
+                    self:registerCommandsForMod(mod)
+                end
             end
         end
     end,
@@ -252,7 +254,7 @@ return {
             local previousArgs = cmd
             local current_arg = table.remove(previousArgs)
             if command then
-                completions = command.autocomplete(current_arg, previousArgs) or {}
+                completions = command.autocomplete(self, current_arg, previousArgs) or {}
             end
         end
         logger:trace("Autocomplete matches: " .. #completions .. " " .. table.concat(completions, ", "))
@@ -300,7 +302,24 @@ return {
         local text = {}
         local i = 1
         local textLength = 0
-        local all_messages = self:getFilteredMessages()
+        local base_messages = self:getFilteredMessages()
+        local all_messages = {}
+
+        for _, message in ipairs(base_messages) do
+            local wrappedLines = self:wrapText(message.text, love.graphics.getWidth() - 20)
+            for _, line in ipairs(wrappedLines) do
+                table.insert(all_messages, {
+                    text = line,
+                    level = message.level,
+                    name = message.name,
+                    time = message.time,
+                    level_numeric = message.level_numeric,
+                    formatted = function()
+                        return line
+                    end
+                })
+            end
+        end
         while textLength < self.max_lines do
             local index = #all_messages - i + self.start_line_offset
             if index < 1 then
@@ -479,7 +498,7 @@ return {
             end
             local success = false
             if self.commands[cmdName] then
-                success = self.commands[cmdName].call(args)
+                success = self.commands[cmdName].call(self, args)
             else
                 self.logger:error("Command not found: " .. cmdName)
             end

@@ -77,7 +77,7 @@ function love.update(dt)
     if balamod.is_loaded == false then
         balamod.is_loaded = true
         console:initialize()
-        console.registerCommands()
+        console:registerCommands(balamod.mods)
         local status, message = pcall(balamod.callModCallbacksIfExists, balamod.mods, "on_enable", true)
         if not status then
             logger:warn("Failed to load mods: ", message)
@@ -100,6 +100,9 @@ function love.draw()
 
     if game_love_draw then
         game_love_draw()
+    end
+    if console.is_open then
+        console:draw()
     end
     local status, result = pcall(balamod.callModCallbacksIfExists, balamod.mods, "on_post_render", false)
     if not status then

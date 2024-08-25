@@ -45,17 +45,6 @@ local RESULT = {
 local paths = {} -- Paths to the files that will be loaded
 local _VERSION = require('balamod_version')
 
-local function splitstring(inputstr, sep)
-    if sep == nil then
-        sep = "%s"
-    end
-    local t={}
-    for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
-        table.insert(t, str)
-    end
-    return t
-end
-
 function buildPaths(root,ignore)
     local items = love.filesystem.getDirectoryItems(root)
     for _, file in ipairs(items) do
