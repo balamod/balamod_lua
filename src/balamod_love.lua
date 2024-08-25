@@ -280,6 +280,7 @@ end
 
 function love.wheelmoved(x, y)
     local cancel_event = false
+    cancel_event = console:handleWheelMoved(x, y)
     local status, result = pcall(balamod.callModCallbacksIfExists, balamod.mods, "on_mousewheel", false, x, y)
     if not status then
         logger:warn("Failed  for mods: ", result)

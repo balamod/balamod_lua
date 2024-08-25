@@ -15,6 +15,7 @@ return {
     max_lines = love.graphics.getHeight() / 20,
     start_line_offset = 1,
     history_index = 0,
+    enabled = true,  -- whether the developer console is enabled or not (can we open it?)
     command_history = {},
     history_path = "dev_console.history",
     modifiers = {
@@ -76,7 +77,7 @@ return {
         end
     end,
     handleKeyPressed = function(self, key_name)
-        if key_name == "f2" then
+        if key_name == "f2" and self.enabled then
             self:toggle()
             return true
         end
@@ -134,6 +135,22 @@ return {
             self.modifiers.meta = false
             self:modifiersListener()
             return false
+        end
+        return false
+    end,
+    handleWheelMoved = function(self, x, y)
+        local sensitivity = 1 -- how many lines to scroll per wheel tick
+        if self.is_open and y ~= 0 then
+            if y > 0 then -- positive values are upward movement
+                -- Figure out how to properly clamp the start_line_offset so that there
+                -- are no empty lines at the top or bottom of the console
+                -- it should probably not go below self.max_lines - #messages ?
+                self.start_line_offset = math.min(self.start_line_offset + sensitivity, self.max_lines)
+            else
+                local messages = self:getFilteredMessages()
+                self.start_line_offset = math.max(self.start_line_offset - sensitivity, sensitivity - #messages)
+            end
+            return true
         end
         return false
     end,
