@@ -5,7 +5,7 @@ G.FUNCS.open_balamod_website = function(e)
     love.system.openURL('https://balamod.github.io/')
 end
 G.FUNCS.open_balamod_github = function(e)
-    love.system.openURL('https://github.com/UwUDev/balamod')
+    love.system.openURL('https://github.com/balamod/balamod_lua')
 end
 G.FUNCS.open_balamod_discord = function(e)
     love.system.openURL('https://discord.gg/p7DeW7pSzA')
