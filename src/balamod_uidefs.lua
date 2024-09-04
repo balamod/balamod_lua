@@ -44,6 +44,48 @@ function create_UIBox_main_menu_buttons()
         },
     }
 
+    if need_update then
+        -- add "UPDATE" button
+        local updateBtn = {
+            n = G.UIT.R,
+            config = {
+                align = "cm",
+                padding = 0.2,
+                r = 0.1,
+                emboss = 0.1,
+                colour = G.C.L_BLACK,
+            },
+            nodes = {
+                {
+                    n = G.UIT.R,
+                    config = {
+                        align = "cm",
+                        padding = 0.15,
+                        minw = 1,
+                        r = 0.1,
+                        hover = true,
+                        colour = G.C.GREEN,
+                        button = 'update_balamod',
+                        shadow = true,
+                    },
+                    nodes = {
+                        {
+                            n = G.UIT.T,
+                            config = {
+                                text = "UPDATE",
+                                scale = 0.6,
+                                colour = G.C.UI.TEXT_LIGHT,
+                                shadow = true,
+                            },
+                        },
+                    },
+                },
+            },
+        }
+
+        table.insert(t.nodes[2].nodes, updateBtn)
+    end
+
     local insertIndex = #t.nodes[2].nodes
     if not G.F_ENGLISH_ONLY then
         insertIndex = insertIndex - 1

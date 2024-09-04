@@ -198,6 +198,7 @@ local function copyTable(t, deep)
     end
 end
 
+-- TODO: Move this to balalib for performance reasons
 -- Merges two key-value tables, overwriting the values of the first table with the values of the second table
 -- @param table1 table
 -- @param table2 table
@@ -230,6 +231,19 @@ local function mergeTables(table1, table2, logger)
     return result
 end
 
+local function splitstring(inputstr, sep)
+    if sep == nil then
+        sep = "%s"
+    end
+    local t={}
+    for str in string.gmatch(inputstr, "([^"..sep.."]+)") do
+        table.insert(t, str)
+    end
+    return t
+end
+
+
+utils.splitstring = splitstring
 utils.stringify = stringify
 utils.contains = contains
 utils.filter = filter

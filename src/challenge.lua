@@ -61,7 +61,8 @@ local function validateChallengeId(challengeId)
     if challengeId == nil then
         error("Challenge ID is nil")
     end
-    if string.match(challengeId, "c_[a-z_]+_[0-9]+") == nil then
+
+    if string.match(challengeId, "^c_[a-z0-9_]+$") == nil then
         error("Invalid challenge ID: " .. challengeId)
     end
     return challengeId

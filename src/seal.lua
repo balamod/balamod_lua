@@ -8,7 +8,7 @@ seal.effects = {}
 seal.timings = {}
 local first_mod = true
 
-local function setData(args)
+local function setData(args) --FIX OVERWRITING ON addSealInfotip CALLS
     local generate_card_ui_ref = generate_card_ui
     function generate_card_ui(_c, full_UI_table, specific_vars, card_type, badges, hide_desc, main_start, main_end)
         local ignore = true
@@ -21,7 +21,18 @@ local function setData(args)
                 end
             end
         end
-        if args.info or not ignore or (_c.set == "Other" and _c.key == args.loc_id) then
+        if args.info or (not ignore) or (_c.set == "Other" and _c.key == args.loc_id) then
+            local info_queue = {}
+            if args.info then
+                if _c.set == args.set and _c.name == args.name then
+                    info_queue[#info_queue + 1] = {
+                        key = args.loc_id,
+                        set = "Other"
+                    }
+                else
+                    return generate_card_ui_ref(_c, full_UI_table, specific_vars, card_type, badges, hide_desc, main_start, main_end)
+                end
+            end
             local first_pass = nil
             if not full_UI_table then
                 first_pass = true
@@ -35,15 +46,6 @@ local function setData(args)
             end
             local desc_nodes = (not full_UI_table.name and full_UI_table.main) or full_UI_table.info
             local name_override = nil
-            local info_queue = {}
-            if args.info then
-                if _c.set == args.set and _c.name == args.name then
-                    info_queue[#info_queue + 1] = {
-                        key = args.loc_id,
-                        set = "Other"
-                    }
-                end
-            end
 
             if full_UI_table.name then
                 full_UI_table.info[#full_UI_table.info + 1] = {}
