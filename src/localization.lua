@@ -35,7 +35,7 @@ local function getModLocale(mod, locale)
         return nil
     end
     local json_schema_result = balalib.validate_schema(schema, json_locale)
-    if json_locale ~= "valid" then
+    if json_schema_result ~= "valid" then
         logger:error("Invalid locale for mod ", mod.id, " and locale ", locale, ": ", json_schema_result)
         return nil
     end
