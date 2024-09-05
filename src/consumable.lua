@@ -79,7 +79,7 @@ local function add(args)
         unlocked = unlocked,
         discovered = discovered,
         cost = cost,
-        consumeable = true,
+        consumable = true,
         name = name,
         pos = pos,
         set = args.set,
