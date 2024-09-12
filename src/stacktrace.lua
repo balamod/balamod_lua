@@ -32,8 +32,8 @@ STP.add_known_table(challenge, "challenge.lua")
 local consumable = require('consumable')
 STP.add_known_table(consumable, "consumable.lua")
 
-local deck = require('deck')
-STP.add_known_table(deck, "deck.lua")
+--local deck = require('deck')
+--STP.add_known_table(deck, "deck.lua")
 
 local joker = require('joker')
 STP.add_known_table(joker, "joker.lua")
